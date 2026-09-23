@@ -86,4 +86,22 @@ describe('reducer — SWAP_QUEST', () => {
     expect(next.swapsUsed).toBe(1)
     expect(next.questsByDate[MONDAY].some((q) => q.id === target.id)).toBe(false)
   })
+
+  it('Ігнорує заміну вже виконаного квеста', () => {
+    const quests = generateDailyQuests(MONDAY, 5, 'normal', true)
+    const done = { ...quests[2], done: true, completedAt: new Date().toISOString() }
+    quests[2] = done
+    const s = stateFor({ swapsUsed: 0, questsByDate: { [MONDAY]: quests } })
+    const next = reducer(s, { type: 'SWAP_QUEST', questId: done.id })
+    expect(next.swapsUsed).toBe(0)
+    expect(next.questsByDate[MONDAY].some((q) => q.id === done.id)).toBe(true)
+  })
+
+  it('Ігнорує заміну, коли ліміт замін на день вичерпано', () => {
+    const quests = generateDailyQuests(MONDAY, 5, 'normal', true)
+    const s = stateFor({ swapsUsed: 3, questsByDate: { [MONDAY]: quests } })
+    const next = reducer(s, { type: 'SWAP_QUEST', questId: quests[0].id })
+    expect(next.swapsUsed).toBe(3)
+    expect(next.questsByDate[MONDAY].map((q) => q.id)).toEqual(quests.map((q) => q.id))
+  })
 })
