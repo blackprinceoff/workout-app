@@ -7,6 +7,15 @@ export function Achievements() {
   const { state } = useGame()
   const unlocked = Object.keys(state.unlockedAchievements).length
 
+  const sorted = [...ACHIEVEMENTS].sort((a, b) => {
+    const ad = state.unlockedAchievements[a.id]
+    const bd = state.unlockedAchievements[b.id]
+    if (ad && bd) return bd.localeCompare(ad)
+    if (ad) return -1
+    if (bd) return 1
+    return 0
+  })
+
   return (
     <>
       <h1 className="page-title">
@@ -17,7 +26,7 @@ export function Achievements() {
       </p>
 
       <div className="trophy-grid">
-        {ACHIEVEMENTS.map((a) => {
+        {sorted.map((a) => {
           const date = state.unlockedAchievements[a.id]
           const isUnlocked = Boolean(date)
           const Icon = ACHIEVEMENT_ICONS[a.id]
