@@ -224,13 +224,13 @@ describe('normalizeState — міграції', () => {
       stats: { strength: 2, endurance: 1, agility: 1, discipline: 4 },
     }
     const s = normalizeState(raw)!
-    expect(s.version).toBe(5)
+    expect(s.version).toBe(6)
     expect(s.habit).toBe(0)
     expect('discipline' in s.stats).toBe(false)
     expect(Object.keys(s.stats)).toEqual(['strength', 'endurance', 'agility'])
   })
 
-  it('v2 → v5: додано sickUsed/habitHistory/swapsUsed/soreGroups/weightHistory', () => {
+  it('v2 → v6: додано sickUsed/habitHistory/swapsUsed/soreGroups/weightHistory/onboardingDone', () => {
     const raw = { version: 2, totalXp: 100 }
     const s = normalizeState(raw)!
     expect(s.sickUsed).toEqual([])
@@ -238,9 +238,10 @@ describe('normalizeState — міграції', () => {
     expect(s.swapsUsed).toBe(0)
     expect(s.soreGroups).toEqual([])
     expect(s.weightHistory).toEqual([])
+    expect(s.onboardingDone).toBe(false)
   })
 
-  it('v3 → v5: додано swapsUsed/soreGroups/weightHistory', () => {
+  it('v3 → v6: додано swapsUsed/soreGroups/weightHistory/onboardingDone', () => {
     const raw = {
       version: 3,
       totalXp: 100,
@@ -248,24 +249,38 @@ describe('normalizeState — міграції', () => {
       habitHistory: [{ date: '2020-01-01', value: 40 }],
     }
     const s = normalizeState(raw)!
-    expect(s.version).toBe(5)
+    expect(s.version).toBe(6)
     expect(s.swapsUsed).toBe(0)
     expect(s.soreGroups).toEqual([])
     expect(s.weightHistory).toEqual([])
     expect(s.sickUsed).toEqual(['2020-01-01'])
   })
 
-  it('v4 → v5: додано weightHistory, лишає swaps/sore', () => {
+  it('v4 → v6: додано weightHistory/onboardingDone, лишає swaps/sore', () => {
     const s = normalizeState({ version: 4, totalXp: 100, swapsUsed: 2, soreGroups: ['push'] })!
-    expect(s.version).toBe(5)
+    expect(s.version).toBe(6)
     expect(s.swapsUsed).toBe(2)
     expect(s.soreGroups).toEqual(['push'])
     expect(s.weightHistory).toEqual([])
+    expect(s.onboardingDone).toBe(false)
   })
 
-  it('v5 лишається без змін', () => {
+  it('v5 → v6: додано onboardingDone, лишає weightHistory', () => {
     const s = normalizeState({ version: 5, totalXp: 100, weightHistory: [{ date: '2026-01-01', valueKg: 80 }] })!
-    expect(s.version).toBe(5)
+    expect(s.version).toBe(6)
+    expect(s.onboardingDone).toBe(false)
+    expect(s.weightHistory).toEqual([{ date: '2026-01-01', valueKg: 80 }])
+  })
+
+  it('v6 лишається без змін (включно з onboardingDone)', () => {
+    const s = normalizeState({
+      version: 6,
+      totalXp: 100,
+      onboardingDone: true,
+      weightHistory: [{ date: '2026-01-01', valueKg: 80 }],
+    })!
+    expect(s.version).toBe(6)
+    expect(s.onboardingDone).toBe(true)
     expect(s.weightHistory).toEqual([{ date: '2026-01-01', valueKg: 80 }])
   })
 })

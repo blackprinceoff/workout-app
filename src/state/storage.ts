@@ -65,6 +65,7 @@ export function createInitialState(): GameState {
     weightHistory: [],
     swapsUsed: 0,
     soreGroups: [],
+    onboardingDone: false,
     events: [],
   }
 }
@@ -74,7 +75,8 @@ export function createInitialState(): GameState {
  *  v1 → v2: integrity → habit, без стата discipline;
  *  v2 → v3: sickUsed / habitHistory;
  *  v3 → v4: swapsUsed / soreGroups;
- *  v4 → v5: weightHistory.
+ *  v4 → v5: weightHistory;
+ *  v5 → v6: onboardingDone.
  */
 function migrateRaw(raw: unknown): unknown {
   if (!raw || typeof raw !== 'object') return raw
@@ -103,6 +105,9 @@ function migrateRaw(raw: unknown): unknown {
   }
   if (version < 5) {
     next.weightHistory = []
+  }
+  if (version < 6) {
+    next.onboardingDone = false
   }
   return next
 }
@@ -168,6 +173,7 @@ export function normalizeState(raw: unknown): GameState | null {
     soreGroups: Array.isArray(r.soreGroups)
       ? r.soreGroups.filter((g): g is MuscleGroup => typeof g === 'string')
       : [],
+    onboardingDone: r.onboardingDone === true,
     events: [],
   }
 }

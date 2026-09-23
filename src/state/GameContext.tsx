@@ -44,6 +44,7 @@ type Action =
   | { type: 'SET_NAME'; name: string }
   | { type: 'UPDATE_PROFILE'; age: number; heightCm: number; weightKg: number }
   | { type: 'ADD_WEIGHT'; valueKg: number }
+  | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'TOGGLE_SOUND' }
   | { type: 'IMPORT_STATE'; state: GameState }
   | { type: 'RESET' }
@@ -272,6 +273,8 @@ export function reducer(state: GameState, action: Action): GameState {
     }
     case 'TOGGLE_SOUND':
       return { ...state, settings: { ...state.settings, sound: !state.settings.sound } }
+    case 'COMPLETE_ONBOARDING':
+      return { ...state, onboardingDone: true }
     case 'IMPORT_STATE':
       return { ...action.state, events: [] }
     case 'RESET': {
@@ -308,6 +311,7 @@ interface GameContextValue {
   setName: (name: string) => void
   updateProfile: (age: number, heightCm: number, weightKg: number) => void
   addWeight: (valueKg: number) => void
+  completeOnboarding: () => void
   toggleSound: () => void
   importState: (json: string) => boolean
   resetGame: () => void
@@ -365,6 +369,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       updateProfile: (age, heightCm, weightKg) =>
         dispatch({ type: 'UPDATE_PROFILE', age, heightCm, weightKg }),
       addWeight: (valueKg) => dispatch({ type: 'ADD_WEIGHT', valueKg }),
+      completeOnboarding: () => dispatch({ type: 'COMPLETE_ONBOARDING' }),
       toggleSound: () => dispatch({ type: 'TOGGLE_SOUND' }),
       importState: (json) => {
         try {

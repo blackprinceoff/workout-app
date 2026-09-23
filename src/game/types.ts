@@ -109,6 +109,7 @@ export interface GameState {
   weightHistory: WeightEntry[]
   swapsUsed: number
   soreGroups: MuscleGroup[]
+  onboardingDone: boolean
   events: GameEvent[]
 }
 

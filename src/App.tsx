@@ -20,13 +20,24 @@ const NAV: { key: PageKey; label: string; icon: LucideIcon }[] = [
 ]
 
 function Shell() {
-  const { state } = useGame()
+  const { state, completeOnboarding } = useGame()
   const [page, setPage] = useState<PageKey>('dashboard')
   const level = levelInfo(state.totalXp).level
 
   useEffect(() => {
     document.title = `FitQuest — ${classNameFor(level)} · ${level}`
   }, [level])
+
+  if (!state.onboardingDone) {
+    return (
+      <OnboardingModal
+        onDone={() => {
+          completeOnboarding()
+          setPage('quests')
+        }}
+      />
+    )
+  }
 
   return (
     <>
@@ -90,5 +101,33 @@ export default function App() {
     <GameProvider>
       <Shell />
     </GameProvider>
+  )
+}
+
+function OnboardingModal({ onDone }: { onDone: () => void }) {
+  return (
+    <div className="overlay">
+      <div className="modal" role="dialog" aria-modal="true" aria-label="Як грати">
+        <span className="modal-icon" style={{ display: 'flex', justifyContent: 'center' }}>
+          <Swords size={52} strokeWidth={1.4} color="var(--gold)" />
+        </span>
+        <div className="modal-title">Ласкаво просимо, воїне</div>
+        <div className="modal-text">Щодня — 5 квестів. Кожен дає XP та прокачує стати. Виконай усі — отримаєш бонус +40 XP.</div>
+        <div style={{ textAlign: 'left', fontSize: 14, lineHeight: 1.7, color: 'var(--text-dim)', marginBottom: 18 }}>
+          <div style={{ marginBottom: 8 }}>
+            <strong style={{ color: 'var(--text)' }}>Дисципліна — це звичка.</strong> Завершений день +5, прогул −10. Серія не дасть зупинитись.
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <strong style={{ color: 'var(--text)' }}>Перші рівні легкі.</strong> Один підхід, вправи від колін чи з опорою. Складні форми відкриються з рівнем.
+          </div>
+          <div>
+            <strong style={{ color: 'var(--text)' }}>Болить м'яз?</strong> Познач у чек-іні або заміни вправу — день адаптується.
+          </div>
+        </div>
+        <button type="button" className="btn btn-gold" onClick={onDone}>
+          До квестів
+        </button>
+      </div>
+    </div>
   )
 }

@@ -129,3 +129,13 @@ describe('reducer — SWAP_QUEST', () => {
     expect(next.questsByDate[MONDAY].map((q) => q.id)).toEqual(quests.map((q) => q.id))
   })
 })
+
+describe('reducer — COMPLETE_ONBOARDING', () => {
+  it('Скидання гри вмикає onboarding знову, завершення — вимикає', () => {
+    const fresh = createInitialState()
+    expect(fresh.onboardingDone).toBe(false)
+    const next = reducer(fresh, { type: 'COMPLETE_ONBOARDING' })
+    expect(next.onboardingDone).toBe(true)
+    expect(next.totalXp).toBe(0)
+  })
+})
