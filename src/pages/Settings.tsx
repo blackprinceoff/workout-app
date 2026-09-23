@@ -35,16 +35,18 @@ export function Settings() {
         </div>
         <div className="form-grid">
           <div className="field">
-            <label>Ім'я</label>
+            <label htmlFor="profile-name">Ім'я</label>
             <input
+              id="profile-name"
               value={state.profile.name}
               onChange={(e) => setName(e.target.value)}
               maxLength={24}
             />
           </div>
           <div className="field">
-            <label>Вік</label>
+            <label htmlFor="profile-age">Вік</label>
             <input
+              id="profile-age"
               type="number"
               value={state.profile.age}
               onChange={(e) =>
@@ -57,8 +59,9 @@ export function Settings() {
             />
           </div>
           <div className="field">
-            <label>Зріст, см</label>
+            <label htmlFor="profile-height">Зріст, см</label>
             <input
+              id="profile-height"
               type="number"
               value={state.profile.heightCm}
               onChange={(e) =>
@@ -71,8 +74,9 @@ export function Settings() {
             />
           </div>
           <div className="field">
-            <label>Вага, кг</label>
+            <label htmlFor="profile-weight">Вага, кг</label>
             <input
+              id="profile-weight"
               type="number"
               value={state.profile.weightKg}
               onChange={(e) =>
@@ -101,6 +105,7 @@ export function Settings() {
             className={`switch ${state.settings.sound ? 'on' : ''}`}
             onClick={toggleSound}
             aria-label="Перемкнути звук"
+            aria-pressed={state.settings.sound}
           />
         </div>
       </div>

@@ -97,6 +97,7 @@ export function Quests() {
                 type="button"
                 className={state.dayIntensity === it ? 'active' : ''}
                 disabled={hasProgress}
+                aria-pressed={state.dayIntensity === it}
                 onClick={() => setIntensity(it)}
               >
                 {INTENSITY_LABEL[it]} ×{INTENSITY_FACTOR[it]}
@@ -122,6 +123,7 @@ export function Quests() {
               type="button"
               className={`chip ${state.soreGroups.includes(o.key) ? 'active' : ''}`}
               disabled={hasProgress}
+              aria-pressed={state.soreGroups.includes(o.key)}
               onClick={() => toggleSore(o.key)}
             >
               {o.label}
@@ -181,6 +183,7 @@ export function Quests() {
             className={`sick-toggle ${sickDayMarked ? 'active' : ''}`}
             onClick={markSickDay}
             disabled={!sickDayMarked && (hasProgress || sickTokensLeft <= 0)}
+            aria-pressed={sickDayMarked}
           >
             {sickDayMarked ? 'Скасувати запис «хворого дня»' : 'Позначити день «хворим»'}
           </button>
