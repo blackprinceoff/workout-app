@@ -42,6 +42,15 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
     (sum, d) => sum + (state.questsByDate[d] ?? []).filter((q) => q.done).length,
     0,
   )
+  const wh = state.weightHistory
+  const lastW = wh[wh.length - 1]
+  const prevW = wh[wh.length - 2]
+  const weightNote =
+    lastW && prevW
+      ? `${lastW.valueKg - prevW.valueKg > 0 ? '+' : ''}${(lastW.valueKg - prevW.valueKg).toFixed(1)} до минулого`
+      : lastW
+        ? 'перший запис'
+        : 'немає записів'
   const nextUnlocks = QUEST_TEMPLATES.filter((t) => (t.minLevel ?? 1) > level.level)
     .sort((a, b) => (a.minLevel ?? 1) - (b.minLevel ?? 1))
     .slice(0, 3)
@@ -231,6 +240,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
             <Kpi value={daysTo100} label="днів до 100" />
             <Kpi value={`${ideal14}/14`} label="ідеальних днів" />
             <Kpi value={quests7} label="квестів за 7 дн" />
+            <Kpi value={lastW ? lastW.valueKg : 0} suffix=" кг" label="вага" note={weightNote} />
           </div>
         </div>
       </div>
@@ -259,7 +269,17 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
   )
 }
 
-function Kpi({ value, label, suffix = '' }: { value: string | number; label: string; suffix?: string }) {
+function Kpi({
+  value,
+  label,
+  suffix = '',
+  note,
+}: {
+  value: string | number
+  label: string
+  suffix?: string
+  note?: string
+}) {
   return (
     <div style={{ textAlign: 'center' }}>
       <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'var(--gold-bright)' }}>
@@ -269,6 +289,7 @@ function Kpi({ value, label, suffix = '' }: { value: string | number; label: str
       <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-dim)' }}>
         {label}
       </div>
+      {note && <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 2 }}>{note}</div>}
     </div>
   )
 }
