@@ -162,7 +162,8 @@ function completeOne(state: GameState, questId: string, done: boolean): GameStat
   return next
 }
 
-function reducer(state: GameState, action: Action): GameState {
+// oxlint-disable-next-line react/only-export-components
+export function reducer(state: GameState, action: Action): GameState {
   switch (action.type) {
     case 'COMPLETE_QUEST':
       return completeOne(state, action.questId, true)
@@ -185,7 +186,14 @@ function reducer(state: GameState, action: Action): GameState {
         dayIntensity: action.intensity,
         questsByDate: {
           ...state.questsByDate,
-          [today]: generateDailyQuests(today, level, action.intensity, false, new Set(), lastStrengthIds),
+          [today]: generateDailyQuests(
+            today,
+            level,
+            action.intensity,
+            false,
+            new Set(state.soreGroups),
+            lastStrengthIds,
+          ),
         },
       }
     }
