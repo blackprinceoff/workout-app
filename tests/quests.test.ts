@@ -179,6 +179,25 @@ describe('swapFor', () => {
   })
 })
 
+describe('Перерви-квести з backlog', () => {
+  it('«Ходьба по сходах» у пулі як не-основний break-квест', () => {
+    const stairs = QUEST_TEMPLATES.find((t) => t.id === 'stairs')
+    expect(stairs).toBeDefined()
+    expect(stairs!.main).toBe(false)
+    expect(stairs!.category).toBe('break')
+    expect(stairs!.minLevel ?? 1).toBe(1)
+  })
+
+  it('Сходи можуть потрапити в день як перерва', () => {
+    let hit = false
+    for (let i = 0; i < 80 && !hit; i++) {
+      const day = generateDailyQuests('2026-10-19', 5, 'normal', true)
+      hit = day.some((q) => q.templateId === 'stairs')
+    }
+    expect(hit).toBe(true)
+  })
+})
+
 describe('Прогресія об\u2019єму за рівнем', () => {
   it('Кількість зростає з кожним рівнем і впертається в плато', () => {
     const pushups = QUEST_TEMPLATES.find((t) => t.id === 'pushups')!

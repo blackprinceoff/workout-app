@@ -552,6 +552,19 @@ export const QUEST_TEMPLATES: QuestTemplate[] = [
     variants: [{ minLevel: 1, title: '5 хв по кімнаті · постав таймер' }],
   },
   {
+    id: 'stairs',
+    title: 'Ходьба по сходах',
+    category: 'break',
+    difficulty: 1,
+    baseXp: 20,
+    main: false,
+    unit: 'fixed',
+    variants: [
+      { minLevel: 1, title: '5 хв підйом-спуск замість ліфта' },
+      { minLevel: 12, title: '2–3 прольоти бігом, обережно на спуску' },
+    ],
+  },
+  {
     id: 'posture',
     title: 'Постава-чек',
     category: 'break',
