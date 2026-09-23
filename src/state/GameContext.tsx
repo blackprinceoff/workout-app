@@ -184,6 +184,7 @@ export function reducer(state: GameState, action: Action): GameState {
       return {
         ...state,
         dayIntensity: action.intensity,
+        swapsUsed: 0,
         questsByDate: {
           ...state.questsByDate,
           [today]: generateDailyQuests(

@@ -28,6 +28,16 @@ describe('reducer — SET_INTENSITY', () => {
     }
   })
 
+  it('Зміна інтенсивності скидає лічильник замін (як чек-ін болю)', () => {
+    const s = stateFor({
+      dayIntensity: 'normal',
+      swapsUsed: 2,
+      questsByDate: { [MONDAY]: generateDailyQuests(MONDAY, 4, 'normal') },
+    })
+    const next = reducer(s, { type: 'SET_INTENSITY', intensity: 'intense' })
+    expect(next.swapsUsed).toBe(0)
+  })
+
   it('Ігнорує зміну, якщо квест дня вже виконано', () => {
     const quests = generateDailyQuests(MONDAY, 1, 'normal', false)
     quests[0] = { ...quests[0], done: true, completedAt: new Date().toISOString() }
