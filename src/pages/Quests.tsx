@@ -164,7 +164,7 @@ export function Quests() {
         ))}
         <div className="settings-hint" style={{ marginTop: 2 }}>
           Замінено вправ сьогодні: {SWAPS_PER_DAY - swapsLeft}/{SWAPS_PER_DAY} — заміна дає
-          альтернативу з тієї ж групи чи легшої сім'ї, без втрати XP.
+          альтернативу з тієї ж групи чи легшої сім'ї (XP перераховується під нову вправу).
         </div>
       </div>
 
