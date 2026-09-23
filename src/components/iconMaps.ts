@@ -3,6 +3,7 @@ import {
   Armchair,
   Award,
   BarChart3,
+  Crown,
   Dumbbell,
   Flame,
   Footprints,
@@ -70,6 +71,7 @@ export const ACHIEVEMENT_ICONS: Record<string, LucideIcon> = {
   quests_1000: Layers,
   balanced: Scale,
   nights_watch: Armchair,
+  boss_week: Crown,
 }
 
 export type { LucideIcon }

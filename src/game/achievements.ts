@@ -1,4 +1,5 @@
 import type { AchievementDef } from './types'
+import { lastNDays } from './dates'
 
 export const ACHIEVEMENTS: AchievementDef[] = [
   {
@@ -123,6 +124,16 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     title: 'Страж спини',
     description: 'Виконай 10 квестів "перерва від сидіння"',
     check: (s) => s.perCategoryDone.break >= 10,
+  },
+  {
+    id: 'boss_week',
+    title: 'Переможець тижня',
+    description: '7 ідеальних днів із 7 останніх — бос тижня переможений',
+    check: (s) =>
+      lastNDays(7, s.currentDate).every((d) => {
+        const qs = s.questsByDate[d]
+        return !!qs && qs.length > 0 && qs.every((q) => q.done)
+      }),
   },
 ]
 
