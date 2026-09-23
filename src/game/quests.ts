@@ -694,7 +694,14 @@ function pick(
 function pickVariant(t: QuestTemplate, level: number, rnd: () => number): QuestVariant {
   const unlocked = t.variants.filter((v) => v.minLevel <= level)
   const pool = unlocked.length > 0 ? unlocked : t.variants
-  return pool[Math.floor(rnd() * pool.length)]
+  // Вага = мінімальний рівень варіанта: з ростом рівня складніші форми трапляються частіше.
+  const total = pool.reduce((sum, v) => sum + v.minLevel, 0)
+  let roll = rnd() * total
+  for (const v of pool) {
+    roll -= v.minLevel
+    if (roll < 0) return v
+  }
+  return pool[pool.length - 1]
 }
 
 /**

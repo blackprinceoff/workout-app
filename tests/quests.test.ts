@@ -237,6 +237,47 @@ describe('Прогресія об\u2019єму за рівнем', () => {
   })
 })
 
+describe('Вибір варіанта вправи (прогресія форми)', () => {
+  it('Рівень 1 — лише стартова форма', () => {
+    let found = 0
+    for (let i = 0; i < 40; i++) {
+      const day = generateDailyQuests(MONDAY, 1, 'normal', true)
+      const sq = day.find((q) => q.templateId === 'squats')
+      if (!sq) continue
+      found++
+      expect(sq.variantId).toBe('l1')
+    }
+    expect(found).toBeGreaterThan(0)
+  })
+
+  it('На високому рівні складніші форми домінують (вага за minLevel)', () => {
+    const counts: Record<string, number> = {}
+    for (let i = 0; i < 800; i++) {
+      const day = generateDailyQuests(MONDAY, 18, 'normal', true)
+      const sq = day.find((q) => q.templateId === 'squats')
+      if (sq) counts[sq.variantId] = (counts[sq.variantId] ?? 0) + 1
+    }
+    // ваги 1:3:6:12:18 для minLevel 1/3/6/12/18 — важкі форми мають сумарно домінувати
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
+    expect(top[0]).toBe('l18')
+    const heavy = (counts['l18'] ?? 0) + (counts['l12'] ?? 0)
+    const light = (counts['l1'] ?? 0) + (counts['l3'] ?? 0) + (counts['l6'] ?? 0)
+    expect(heavy).toBeGreaterThan(light * 2)
+  })
+
+  it('Стартова форма на рівні 8 рідша за просунуті', () => {
+    const counts: Record<string, number> = {}
+    for (let i = 0; i < 800; i++) {
+      const day = generateDailyQuests(MONDAY, 8, 'normal', true)
+      const sq = day.find((q) => q.templateId === 'squats')
+      if (sq) counts[sq.variantId] = (counts[sq.variantId] ?? 0) + 1
+    }
+    // ваги 1:3:6 → топ (l6) має траплятись найчастіше
+    expect(counts['l6'] ?? 0).toBeGreaterThan(counts['l1'] ?? 0)
+    expect(counts['l6'] ?? 0).toBeGreaterThan(counts['l3'] ?? 0)
+  })
+})
+
 describe('Рівневі розблокування', () => {
   it('Пістолет з\u2019являється лише з рівня 18', () => {
     for (let l = 1; l <= 17; l++) {
