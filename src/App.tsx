@@ -19,14 +19,26 @@ const NAV: { key: PageKey; label: string; icon: LucideIcon }[] = [
   { key: 'settings', label: 'Налаштування', icon: NAV_ICONS.settings },
 ]
 
+const PAGE_KEY = 'fitquest-page'
+
+function initialPage(): PageKey {
+  if (typeof sessionStorage === 'undefined') return 'dashboard'
+  const stored = sessionStorage.getItem(PAGE_KEY)
+  return stored && (NAV.map((n) => n.key) as string[]).includes(stored) ? (stored as PageKey) : 'dashboard'
+}
+
 function Shell() {
   const { state, completeOnboarding } = useGame()
-  const [page, setPage] = useState<PageKey>('dashboard')
+  const [page, setPage] = useState<PageKey>(initialPage)
   const level = levelInfo(state.totalXp).level
 
   useEffect(() => {
     document.title = `FitQuest — ${classNameFor(level)} · ${level}`
   }, [level])
+
+  useEffect(() => {
+    if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(PAGE_KEY, page)
+  }, [page])
 
   if (!state.onboardingDone) {
     return (
