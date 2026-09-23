@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createInitialState, normalizeState, rollover } from '../src/state/storage'
+import { createInitialState, normalizeState, rollover, sickTokensLeft } from '../src/state/storage'
 import { shiftDateKey } from '../src/game/dates'
 import type { DailyQuest, GameState } from '../src/game/types'
 
@@ -146,6 +146,66 @@ describe('rollover — скидання й історія', () => {
     const days = next.habitHistory.map((p) => p.date)
     expect(days).toEqual(['2020-01-01', '2020-01-02'])
     expect(next.habitHistory[next.habitHistory.length - 1].value).toBe(20)
+  })
+})
+
+describe('rollover — «хворий день» у багатоденній прогалині', () => {
+  it('Прогалина 3 дні з «хворим» посередині: −10, −5, −10; серія обнуляється лише на прогулах', () => {
+    const next = rollover(
+      base({ habit: 40, streak: 7, sickUsed: ['2020-01-02'], questsByDate: {} }),
+      '2020-01-04',
+    )
+    // 01-01: прогул −10 → 30 · 01-02: хворий −5 → 25 · 01-03: прогул −10 → 15
+    expect(next.habit).toBe(15)
+    expect(next.streak).toBe(0)
+    expect(next.sickUsed).toEqual([])
+    expect(next.events.filter((e) => e.type === 'sickDay')).toHaveLength(1)
+  })
+
+  it('Два хворих дні поспіль без тренувань: −5 за кожен, серія заморожена', () => {
+    const next = rollover(
+      base({ habit: 40, streak: 3, sickUsed: ['2020-01-01', '2020-01-02'], questsByDate: {} }),
+      '2020-01-03',
+    )
+    expect(next.habit).toBe(30)
+    expect(next.streak).toBe(3)
+    expect(next.bestStreak).toBe(7) // рекорд не змінюється
+    expect(next.sickUsed).toEqual([])
+  })
+
+  it('Два хворих дні + один прогул: −25 сумарно, серія падає лише на прогулі', () => {
+    const next = rollover(
+      base({ habit: 40, streak: 3, sickUsed: ['2020-01-01', '2020-01-02'], questsByDate: {} }),
+      '2020-01-04',
+    )
+    // 01-01 хворий −5 · 01-02 хворий −5 · 01-03 прогул −10
+    expect(next.habit).toBe(20)
+    expect(next.streak).toBe(0)
+  })
+})
+
+describe('sickTokensLeft — ковзне вікно 30 днів', () => {
+  it('Ліміт 3: після трьох використаних у вікні токенів не лишається', () => {
+    const s = base({ currentDate: '2020-02-10', sickUsed: ['2020-01-15', '2020-01-20', '2020-02-01'] })
+    expect(sickTokensLeft(s)).toBe(0)
+  })
+
+  it('Токени поза вікном (>30 днів) не рахуються', () => {
+    const s = base({ currentDate: '2020-02-10', sickUsed: ['2020-01-01', '2020-01-20'] })
+    // вікно відкривається 2020-01-11; 2020-01-01 — поза ним
+    expect(sickTokensLeft(s)).toBe(2)
+  })
+
+  it('На межі ліміту з багатоденними прогулами: спожиті токени згоряють у rollover', () => {
+    const s = base({
+      currentDate: '2020-02-01',
+      sickUsed: ['2020-01-25', '2020-01-28', '2020-02-01'],
+      questsByDate: {},
+    })
+    expect(sickTokensLeft(s)).toBe(0)
+    const next = rollover(s, '2020-02-05')
+    // 02-01 споживається в rollover; лишились два токени у вікні
+    expect(sickTokensLeft(next)).toBe(1)
   })
 })
 
