@@ -1,0 +1,25 @@
+{
+  "name": "FitQuest — Шлях воїна",
+  "short_name": "FitQuest",
+  "description": "RPG-трекер, що вирощує з тебе дисципліну",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a0d13",
+  "theme_color": "#0a0d13",
+  "lang": "uk",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
