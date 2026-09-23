@@ -162,6 +162,16 @@ describe('swapFor', () => {
     expect(others.has(swapped.templateId)).toBe(false)
   })
 
+  it('Заміна силового віддає перевагу тій самій групі м\u2019язів', () => {
+    const day = generateDailyQuests(MONDAY, 5, 'normal', true)
+    const target = strengthOf(day).find((q) => q.muscle === 'push') ?? strengthOf(day)[0]
+    const others = new Set(day.filter((q) => q.id !== target.id).map((q) => q.templateId))
+    const swaps = Array.from({ length: 40 }, (_, i) =>
+      swapFor(target, 5, effectiveLoad(MONDAY, 'normal', 5), MONDAY, others, i % 3),
+    )
+    expect(swaps.every((q) => q.muscle === target.muscle)).toBe(true)
+  })
+
   it('Повертає той самий квест, якщо пул замін порожній', () => {
     const day = generateDailyQuests(MONDAY, 5, 'normal', true)
     const target = day[0]
