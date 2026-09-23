@@ -1,4 +1,14 @@
-import { CLASS_BY_LEVEL, CLASS_CYCLE, EPITHETS, XP_CURVE_SEGMENTS } from './constants'
+import {
+  CLASS_BY_LEVEL,
+  CLASS_CYCLE,
+  EPITHETS,
+  HABIT_MAX,
+  HABIT_XP_BASE,
+  HABIT_XP_SPREAD,
+  STREAK_BONUS_CAP,
+  STREAK_BONUS_PER_DAY,
+  XP_CURVE_SEGMENTS,
+} from './constants'
 import type { GameState, LevelInfo } from './types'
 
 export function xpToNextLevel(level: number): number {
@@ -45,4 +55,20 @@ export function levelInfo(totalXp: number): LevelInfo {
 export function powerScore(state: GameState): number {
   const { strength, endurance, agility } = state.stats
   return strength + endurance + agility + Math.round(state.habit / 10)
+}
+
+/** Множник XP: серія (кап +20%) × звичка (0.8–1.0). */
+export function xpMultiplierParts(streak: number, habit: number): {
+  streak: number
+  habit: number
+  total: number
+} {
+  const s = 1 + Math.min(STREAK_BONUS_CAP, streak * STREAK_BONUS_PER_DAY)
+  const h = HABIT_XP_BASE + HABIT_XP_SPREAD * (habit / HABIT_MAX)
+  return { streak: s, habit: h, total: s * h }
+}
+
+/** Підсумковий множник XP за серію та звичку. */
+export function xpMultiplier(streak: number, habit: number): number {
+  return xpMultiplierParts(streak, habit).total
 }

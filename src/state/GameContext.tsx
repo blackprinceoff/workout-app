@@ -20,17 +20,9 @@ import {
 } from './storage'
 import { checkAchievements } from '../game/achievements'
 import { shiftDateKey } from '../game/dates'
-import { classNameFor, levelInfo } from '../game/leveling'
+import { classNameFor, levelInfo, xpMultiplier } from '../game/leveling'
 import { effectiveLoad, generateDailyQuests, swapFor, unlocksBetween } from '../game/quests'
-import {
-  DAILY_COMPLETE_BONUS,
-  HABIT_XP_BASE,
-  HABIT_XP_SPREAD,
-  HABIT_MAX,
-  STREAK_BONUS_CAP,
-  STREAK_BONUS_PER_DAY,
-  SWAPS_PER_DAY,
-} from '../game/constants'
+import { DAILY_COMPLETE_BONUS, SWAPS_PER_DAY } from '../game/constants'
 import type {
   DailyQuest,
   GameEvent,
@@ -55,12 +47,6 @@ type Action =
   | { type: 'IMPORT_STATE'; state: GameState }
   | { type: 'RESET' }
   | { type: 'ROLLOVER' }
-
-function xpMultiplier(state: GameState): number {
-  const streakBonus = Math.min(STREAK_BONUS_CAP, state.streak * STREAK_BONUS_PER_DAY)
-  const habitBonus = HABIT_XP_BASE + HABIT_XP_SPREAD * (state.habit / HABIT_MAX)
-  return (1 + streakBonus) * habitBonus
-}
 
 function unlockAchievements(
   state: GameState,
@@ -102,7 +88,7 @@ function completeOne(state: GameState, questId: string, done: boolean): GameStat
   }
 
   if (done) {
-    const gain = Math.max(1, Math.round(q.xp * xpMultiplier(state)))
+    const gain = Math.max(1, Math.round(q.xp * xpMultiplier(state.streak, state.habit)))
     const stats = { ...next.stats }
     if (q.stat) stats[q.stat] += 1
     next = {
@@ -150,7 +136,7 @@ function completeOne(state: GameState, questId: string, done: boolean): GameStat
     }
   } else {
     // Рефанд повертає реально виграний XP (з множником серії/звички), а не сиру базу.
-    const refund = Math.max(1, Math.round(q.xp * xpMultiplier(state)))
+    const refund = Math.max(1, Math.round(q.xp * xpMultiplier(state.streak, state.habit)))
     const stats = { ...next.stats }
     if (q.stat) stats[q.stat] = Math.max(0, stats[q.stat] - 1)
     next = {

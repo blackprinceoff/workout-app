@@ -4,7 +4,7 @@ import { generateDailyQuests } from '../src/game/quests'
 import { shiftDateKey } from '../src/game/dates'
 import { HABIT_MAX } from '../src/game/constants'
 import type { DailyQuest, Intensity } from '../src/game/types'
-import { levelInfo, xpToNextLevel } from '../src/game/leveling'
+import { levelInfo, xpMultiplier, xpToNextLevel } from '../src/game/leveling'
 
 const start = '2026-01-05' // Понеділок
 const TARGET_LEVEL = 100
@@ -25,9 +25,7 @@ const PROFILES = {
 } satisfies Record<string, Profile & { missProb: number }>
 
 function multOf(streak: number, habit: number): number {
-  const streakBonus = Math.min(0.2, streak * 0.02)
-  const habitBonus = 0.8 + 0.2 * (habit / HABIT_MAX)
-  return (1 + streakBonus) * habitBonus
+  return xpMultiplier(streak, habit)
 }
 
 function marchToLevel(profile: Profile): number {
@@ -143,6 +141,23 @@ describe.skip('Каталог для калібрування (друк табл
         )}, xpToNext(100)=${xpToNextLevel(100)}\n`,
     )
     expect(true).toBe(true)
+  })
+})
+
+describe('Множник XP', () => {
+  it('Старт (серія 0, звичка 0) = 0.8 — звичка зрізає до −20%', () => {
+    expect(xpMultiplier(0, 0)).toBeCloseTo(0.8)
+  })
+
+  it('Повна звичка без серії = 1.0; з повною серією = 1.2 (кап +20%)', () => {
+    expect(xpMultiplier(0, HABIT_MAX)).toBeCloseTo(1.0)
+    expect(xpMultiplier(10, HABIT_MAX)).toBeCloseTo(1.2)
+    expect(xpMultiplier(30, HABIT_MAX)).toBeCloseTo(1.2)
+  })
+
+  it('Серія капується на +20% незалежно від довжини', () => {
+    expect(xpMultiplier(10, 40)).toBeCloseTo(xpMultiplier(50, 40))
+    expect(xpMultiplier(50, 40)).toBeCloseTo((1 + 0.2) * (0.8 + 0.2 * 0.4))
   })
 })
 

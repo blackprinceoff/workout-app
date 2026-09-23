@@ -9,6 +9,7 @@ import {
 } from '../game/constants'
 import { formatUa } from '../game/dates'
 import { dayKindOf, effectiveLoad, warmFactor } from '../game/quests'
+import { xpMultiplierParts } from '../game/leveling'
 import type { DailyQuest, Intensity, MuscleGroup } from '../game/types'
 import { CategoryGlyph, Check, RefreshCw, ScrollText, Shield, Sparkles, StatGlyph, Target } from '../components/Glyphs'
 
@@ -40,6 +41,7 @@ export function Quests() {
   const kind = dayKindOf(state.currentDate)
   const warm = warmFactor(level.level)
   const load = effectiveLoad(state.currentDate, state.dayIntensity, level.level)
+  const mult = xpMultiplierParts(state.streak, state.habit)
   const hasProgress = todayQuests.some((q) => q.done)
 
   const isEvening = new Date().getHours() >= 18
@@ -80,6 +82,10 @@ export function Quests() {
               <div className="settings-hint">
                 Навантаження дня ×{load.toFixed(2)}
                 {warm < 1 && ` (цикл ×${warm} — розігрів, повний вплив з рівня 7)`}
+              </div>
+              <div className="settings-hint">
+                Множник XP ×{mult.total.toFixed(2)} (серія ×{mult.streak.toFixed(2)} · звичка ×
+                {mult.habit.toFixed(2)})
               </div>
             </div>
           </div>

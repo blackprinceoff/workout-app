@@ -1,6 +1,7 @@
 import { useGame } from '../state/GameContext'
 import { CLASS_BY_LEVEL, CATEGORY_LABELS, HABIT_DAY_GAIN, STAT_LABELS } from '../game/constants'
 import { lastNDays } from '../game/dates'
+import { xpMultiplier } from '../game/leveling'
 import { QUEST_TEMPLATES } from '../game/quests'
 import {
   BarChart3,
@@ -23,7 +24,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
   const mainTotal = todayQuests.filter((q) => q.main).length
   const totalDone = todayQuests.filter((q) => q.done).length
 
-  const mult = (1 + Math.min(0.2, state.streak * 0.02)) * (0.8 + 0.2 * (state.habit / 100))
+  const mult = xpMultiplier(state.streak, state.habit)
 
   const categories: QuestCategory[] = ['strength', 'core', 'cardio', 'mobility', 'break']
 
@@ -116,7 +117,9 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
                   textAlign: 'center',
                 }}
               >
-                {state.streak > 0 ? `Бонус XP ×${mult.toFixed(2)}` : 'Зроби квест сьогодні!'}
+                {state.streak > 0
+                  ? `Бонус XP ×${mult.toFixed(2)}`
+                  : `Множник XP ×${mult.toFixed(2)} — зроби квест сьогодні!`}
               </div>
             </div>
           </div>
