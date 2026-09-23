@@ -13,7 +13,13 @@ import {
   STORAGE_KEY,
   STATE_VERSION,
 } from '../game/constants'
-import type { GameSettings, GameState, PlayerProfile, QuestCategory } from '../game/types'
+import type {
+  GameSettings,
+  GameState,
+  MuscleGroup,
+  PlayerProfile,
+  QuestCategory,
+} from '../game/types'
 
 const EMPTY_CATEGORY: Record<QuestCategory, number> = {
   strength: 0,
@@ -99,26 +105,90 @@ function migrateRaw(raw: unknown): unknown {
 export function normalizeState(raw: unknown): GameState | null {
   if (!raw || typeof raw !== 'object') return null
   const r = migrateRaw(raw) as Partial<GameState>
-  if (typeof r.totalXp !== 'number') return null
+  if (typeof r.totalXp !== 'number' || !Number.isFinite(r.totalXp) || r.totalXp < 0) return null
   const base = createInitialState()
-  if (r.questsByDate && typeof r.questsByDate === 'object') {
-    base.questsByDate = r.questsByDate as GameState['questsByDate']
-  }
+  const questsByDate = Object.fromEntries(
+    Object.entries(r.questsByDate ?? {}).filter(([, v]) => isQuestList(v)),
+  )
   return {
     ...base,
     ...r,
-    stats: { ...base.stats, ...(r.stats ?? {}) },
-    perCategoryDone: { ...base.perCategoryDone, ...(r.perCategoryDone ?? {}) },
+    currentDate: isDateKey(r.currentDate) ? r.currentDate : base.currentDate,
+    stats: { ...base.stats, ...pickNonNeg(r.stats, ['strength', 'endurance', 'agility']) },
+    perCategoryDone: { ...base.perCategoryDone, ...pickNonNeg(r.perCategoryDone, Object.keys(EMPTY_CATEGORY)) },
+    habit: toNonNeg(r.habit),
+    bestHabit: toNonNeg(r.bestHabit),
+    streak: toNonNeg(r.streak),
+    bestStreak: toNonNeg(r.bestStreak),
+    dayBonusClaimed: r.dayBonusClaimed === true,
+    totalQuestsDone: toNonNeg(r.totalQuestsDone),
+    totalXp: r.totalXp,
+    dayIntensity: isIntensity(r.dayIntensity) ? r.dayIntensity : 'normal',
+    profile: {
+      name: typeof r.profile?.name === 'string' ? r.profile.name : base.profile.name,
+      age: toNonNeg(r.profile?.age, base.profile.age),
+      heightCm: toNonNeg(r.profile?.heightCm, base.profile.heightCm),
+      weightKg: toNonNeg(r.profile?.weightKg, base.profile.weightKg),
+    },
+    settings: {
+      sound: typeof r.settings?.sound === 'boolean' ? r.settings.sound : base.settings.sound,
+    },
+    questsByDate,
     unlockedAchievements:
-      typeof r.unlockedAchievements === 'object'
+      typeof r.unlockedAchievements === 'object' && r.unlockedAchievements !== null
         ? (r.unlockedAchievements as GameState['unlockedAchievements'])
         : {},
-    sickUsed: Array.isArray(r.sickUsed) ? (r.sickUsed as string[]) : [],
-    habitHistory: Array.isArray(r.habitHistory) ? (r.habitHistory as GameState['habitHistory']) : [],
-    swapsUsed: typeof r.swapsUsed === 'number' ? r.swapsUsed : 0,
-    soreGroups: Array.isArray(r.soreGroups) ? (r.soreGroups as GameState['soreGroups']) : [],
+    sickUsed: Array.isArray(r.sickUsed) ? r.sickUsed.filter((d): d is string => typeof d === 'string') : [],
+    habitHistory: Array.isArray(r.habitHistory)
+      ? r.habitHistory.filter(
+          (h): h is GameState['habitHistory'][number] =>
+            !!h && typeof h === 'object' && isDateKey((h as { date?: unknown }).date) &&
+            typeof (h as { value?: unknown }).value === 'number' &&
+            Number.isFinite((h as { value?: unknown }).value),
+        )
+      : [],
+    swapsUsed: typeof r.swapsUsed === 'number' && Number.isFinite(r.swapsUsed) ? r.swapsUsed : 0,
+    soreGroups: Array.isArray(r.soreGroups)
+      ? r.soreGroups.filter((g): g is MuscleGroup => typeof g === 'string')
+      : [],
     events: [],
   }
+}
+
+function toNonNeg(v: unknown, fallback = 0): number {
+  return typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : fallback
+}
+
+function pickNonNeg(v: unknown, allow: readonly string[]): Record<string, number> {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return {}
+  const out: Record<string, number> = {}
+  for (const [k, val] of Object.entries(v)) {
+    if (allow.includes(k) && typeof val === 'number' && Number.isFinite(val) && val >= 0) {
+      out[k] = val
+    }
+  }
+  return out
+}
+
+function isDateKey(v: unknown): v is string {
+  return typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)
+}
+
+function isIntensity(v: unknown): v is GameState['dayIntensity'] {
+  return v === 'light' || v === 'normal' || v === 'intense'
+}
+
+function isQuestList(v: unknown): v is GameState['questsByDate'][string] {
+  return (
+    Array.isArray(v) &&
+    v.every(
+      (q) =>
+        !!q &&
+        typeof q === 'object' &&
+        typeof (q as { id?: unknown }).id === 'string' &&
+        typeof (q as { done?: unknown }).done === 'boolean',
+    )
+  )
 }
 
 export function loadState(): GameState | null {

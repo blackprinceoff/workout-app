@@ -259,3 +259,90 @@ describe('normalizeState — міграції', () => {
     expect(s.soreGroups).toEqual(['push'])
   })
 })
+
+describe('normalizeState — стійкість до керованого JSON (імпорт)', () => {
+  it('Відхиляє вхід без числа totalXp / з NaN / від’ємним', () => {
+    expect(normalizeState({ version: 4, totalXp: '100' })).toBeNull()
+    expect(normalizeState({ version: 4, totalXp: NaN })).toBeNull()
+    expect(normalizeState({ version: 4, totalXp: -5 })).toBeNull()
+  })
+
+  it('Викидає дні з не-масивом чи зламаними елементами questsByDate, зберігає цілі', () => {
+    const ok = quest('plank', true, true)
+    const raw = {
+      version: 4,
+      totalXp: 100,
+      questsByDate: {
+        '2020-01-01': { foo: 1 },
+        '2020-01-02': [ok, null as unknown as DailyQuest, { id: 1 } as unknown as DailyQuest],
+        '2020-01-03': [ok],
+      },
+    }
+    const s = normalizeState(raw)!
+    expect(s.questsByDate['2020-01-01']).toBeUndefined()
+    expect(s.questsByDate['2020-01-02']).toBeUndefined()
+    expect(s.questsByDate['2020-01-03']).toEqual([ok])
+  })
+
+  it('Очищає стати: рядки/NaN/від’ємні → 0, невідомі ключі не протікають', () => {
+    const s = normalizeState({
+      version: 4,
+      totalXp: 100,
+      stats: { strength: '5', endurance: NaN, agility: -3, extra: 9 },
+    })!
+    expect(s.stats.strength).toBe(0)
+    expect(s.stats.endurance).toBe(0)
+    expect(s.stats.agility).toBe(0)
+    expect(s.stats.extra).toBeUndefined()
+  })
+
+  it('Відкидає не-розбірливу дату currentDate і мотлох у звичці/серії', () => {
+    const s = normalizeState({
+      version: 4,
+      totalXp: 50,
+      currentDate: 'вчора',
+      habit: -10,
+      streak: NaN,
+      bestStreak: '7',
+      dayIntensity: 'занадто',
+    })!
+    expect(typeof s.currentDate).toBe('string')
+    expect(/^\d{4}-\d{2}-\d{2}$/.test(s.currentDate)).toBe(true)
+    expect(s.habit).toBe(0)
+    expect(s.streak).toBe(0)
+    expect(s.bestStreak).toBe(0)
+    expect(s.dayIntensity).toBe('normal')
+  })
+
+  it('Профіль і налаштування відновлюються з базових значень при мотлоху', () => {
+    const s = normalizeState({
+      version: 4,
+      totalXp: 10,
+      profile: { name: 5, age: '21', heightCm: -180, weightKg: NaN },
+      settings: { sound: 'так' },
+    })!
+    expect(s.profile.name).toBe('Новачок')
+    expect(s.profile.age).toBe(21)
+    expect(s.profile.heightCm).toBe(183)
+    expect(s.profile.weightKg).toBe(72)
+    expect(s.settings.sound).toBe(true)
+  })
+
+  it('sickUsed/soreGroups — лише рядки; habitHistory — лише валідні записи', () => {
+    const s = normalizeState({
+      version: 4,
+      totalXp: 10,
+      sickUsed: ['2020-01-01', 7 as unknown as string, null as unknown as string],
+      soreGroups: ['push', { x: 1 } as unknown as string],
+      habitHistory: [
+        { date: '2020-01-01', value: 40 },
+        null,
+        { date: 5, value: 'x' },
+        { date: '2020-01-02', value: NaN },
+      ],
+    })!
+    expect(s.sickUsed).toEqual(['2020-01-01'])
+    expect(s.soreGroups).toEqual(['push'])
+    expect(s.habitHistory).toEqual([{ date: '2020-01-01', value: 40 }])
+  })
+})
