@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { GameProvider, useGame } from './state/GameContext'
 import { EventLayer } from './components/EventLayer'
 import { Dashboard } from './pages/Dashboard'
@@ -7,6 +7,7 @@ import { Progress } from './pages/Progress'
 import { Achievements } from './pages/Achievements'
 import { Settings } from './pages/Settings'
 import { Flame, NAV_ICONS, Swords, type LucideIcon } from './components/Glyphs'
+import { classNameFor, levelInfo } from './game/leveling'
 
 type PageKey = 'dashboard' | 'quests' | 'progress' | 'achievements' | 'settings'
 
@@ -21,6 +22,11 @@ const NAV: { key: PageKey; label: string; icon: LucideIcon }[] = [
 function Shell() {
   const { state } = useGame()
   const [page, setPage] = useState<PageKey>('dashboard')
+  const level = levelInfo(state.totalXp).level
+
+  useEffect(() => {
+    document.title = `FitQuest — ${classNameFor(level)} · ${level}`
+  }, [level])
 
   return (
     <>
