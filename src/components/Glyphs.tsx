@@ -16,6 +16,7 @@ export {
   BarChart3,
   CalendarDays,
   Check,
+  Crown,
   Download,
   Dumbbell,
   Flame,

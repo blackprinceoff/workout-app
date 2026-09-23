@@ -5,6 +5,7 @@ import { powerScore } from '../game/leveling'
 import {
   BarChart3,
   CalendarDays,
+  Crown,
   Flame,
   Medal,
   Swords,
@@ -16,6 +17,7 @@ export function Progress() {
   const { state } = useGame()
 
   const days14 = useMemo(() => lastNDays(14, state.currentDate), [state.currentDate])
+  const days7 = useMemo(() => lastNDays(7, state.currentDate), [state.currentDate])
   const days35 = useMemo(() => lastNDays(35, state.currentDate), [state.currentDate])
 
   const doneCount = (key: string) => (state.questsByDate[key] ?? []).filter((q) => q.done).length
@@ -25,6 +27,11 @@ export function Progress() {
   }).length
 
   const maxPerDay = Math.max(5, ...days14.map(doneCount))
+
+  const wonDays = days7.filter((d) => {
+    const qs = state.questsByDate[d] ?? []
+    return qs.length > 0 && qs.every((q) => q.done)
+  }).length
 
   return (
     <>
@@ -53,6 +60,37 @@ export function Progress() {
         <div className="kpi">
           <div className="kpi-value">{perfectDays}</div>
           <div className="kpi-label">Ідеальних днів (14 дн)</div>
+        </div>
+      </div>
+
+      <div className="panel section-mb" style={{ marginTop: 16 }}>
+        <div className="panel-title">
+          <Crown size={16} /> Бос тижня
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 10 }}>
+          Сім днів без прогулів — і ти перемагаєш тижневого боса. Золота клітинка — повністю виконаний день.
+        </p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {days7.map((d) => {
+            const qs = state.questsByDate[d] ?? []
+            const all = qs.length > 0 && qs.every((q) => q.done)
+            const partial = qs.some((q) => q.done)
+            const level = all ? 'l4' : partial ? 'l2' : 'l0'
+            return (
+              <div
+                key={d}
+                className={`heat-cell ${level} ${d === state.currentDate ? 'today' : ''}`}
+                title={`${weekdayShort(d)} ${d} · ${qs.filter((q) => q.done).length}/${qs.length} квестів`}
+              />
+            )
+          })}
+        </div>
+        <div className="settings-hint" style={{ marginTop: 8 }}>
+          {wonDays === 7 ? (
+            <span style={{ color: 'var(--gold-bright)', fontWeight: 700 }}>Бос переможений — тиждень без прогулів!</span>
+          ) : (
+            <>Переможних днів: {wonDays}/7</>
+          )}
         </div>
       </div>
 
