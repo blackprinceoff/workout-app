@@ -32,12 +32,12 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
   const trendDelta = trend.length < 2 ? 0 : trend[trend.length - 1].value - trend[0].value
   const trendLabel = trend.length < 2 ? 'ще формується' : trendDelta >= 5 ? 'росте' : trendDelta <= -5 ? 'падає' : 'стабільна'
   const daysTo100 = Math.max(0, Math.ceil((100 - state.habit) / HABIT_DAY_GAIN))
-  const last14 = lastNDays(14)
+  const last14 = lastNDays(14, state.currentDate)
   const ideal14 = last14.filter((d) => {
     const q = state.questsByDate[d]
     return !!q && q.length > 0 && q.every((x) => x.done)
   }).length
-  const last7 = lastNDays(7)
+  const last7 = lastNDays(7, state.currentDate)
   const quests7 = last7.reduce(
     (sum, d) => sum + (state.questsByDate[d] ?? []).filter((q) => q.done).length,
     0,
