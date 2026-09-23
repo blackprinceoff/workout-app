@@ -224,22 +224,23 @@ describe('normalizeState — міграції', () => {
       stats: { strength: 2, endurance: 1, agility: 1, discipline: 4 },
     }
     const s = normalizeState(raw)!
-    expect(s.version).toBe(4)
+    expect(s.version).toBe(5)
     expect(s.habit).toBe(0)
     expect('discipline' in s.stats).toBe(false)
     expect(Object.keys(s.stats)).toEqual(['strength', 'endurance', 'agility'])
   })
 
-  it('v2 → v4: додано sickUsed/habitHistory/swapsUsed/soreGroups', () => {
+  it('v2 → v5: додано sickUsed/habitHistory/swapsUsed/soreGroups/weightHistory', () => {
     const raw = { version: 2, totalXp: 100 }
     const s = normalizeState(raw)!
     expect(s.sickUsed).toEqual([])
     expect(s.habitHistory).toEqual([])
     expect(s.swapsUsed).toBe(0)
     expect(s.soreGroups).toEqual([])
+    expect(s.weightHistory).toEqual([])
   })
 
-  it('v3 → v4: додано swapsUsed/soreGroups', () => {
+  it('v3 → v5: додано swapsUsed/soreGroups/weightHistory', () => {
     const raw = {
       version: 3,
       totalXp: 100,
@@ -247,16 +248,25 @@ describe('normalizeState — міграції', () => {
       habitHistory: [{ date: '2020-01-01', value: 40 }],
     }
     const s = normalizeState(raw)!
-    expect(s.version).toBe(4)
+    expect(s.version).toBe(5)
     expect(s.swapsUsed).toBe(0)
     expect(s.soreGroups).toEqual([])
+    expect(s.weightHistory).toEqual([])
     expect(s.sickUsed).toEqual(['2020-01-01'])
   })
 
-  it('v4 лишається без змін', () => {
+  it('v4 → v5: додано weightHistory, лишає swaps/sore', () => {
     const s = normalizeState({ version: 4, totalXp: 100, swapsUsed: 2, soreGroups: ['push'] })!
+    expect(s.version).toBe(5)
     expect(s.swapsUsed).toBe(2)
     expect(s.soreGroups).toEqual(['push'])
+    expect(s.weightHistory).toEqual([])
+  })
+
+  it('v5 лишається без змін', () => {
+    const s = normalizeState({ version: 5, totalXp: 100, weightHistory: [{ date: '2026-01-01', valueKg: 80 }] })!
+    expect(s.version).toBe(5)
+    expect(s.weightHistory).toEqual([{ date: '2026-01-01', valueKg: 80 }])
   })
 })
 
@@ -344,5 +354,20 @@ describe('normalizeState — стійкість до керованого JSON (
     expect(s.sickUsed).toEqual(['2020-01-01'])
     expect(s.soreGroups).toEqual(['push'])
     expect(s.habitHistory).toEqual([{ date: '2020-01-01', value: 40 }])
+  })
+
+  it('weightHistory — лише валідні записи {date, valueKg}', () => {
+    const s = normalizeState({
+      version: 5,
+      totalXp: 10,
+      weightHistory: [
+        { date: '2026-01-05', valueKg: 80.4 },
+        null as unknown as { date: string; valueKg: number },
+        { date: 'вчора', valueKg: 81 },
+        { date: '2026-01-12', valueKg: -3 },
+        { date: '2026-01-19', valueKg: NaN },
+      ],
+    })!
+    expect(s.weightHistory).toEqual([{ date: '2026-01-05', valueKg: 80.4 }])
   })
 })

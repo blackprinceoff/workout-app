@@ -43,6 +43,7 @@ type Action =
   | { type: 'CLEAR_EVENTS' }
   | { type: 'SET_NAME'; name: string }
   | { type: 'UPDATE_PROFILE'; age: number; heightCm: number; weightKg: number }
+  | { type: 'ADD_WEIGHT'; valueKg: number }
   | { type: 'TOGGLE_SOUND' }
   | { type: 'IMPORT_STATE'; state: GameState }
   | { type: 'RESET' }
@@ -260,6 +261,15 @@ export function reducer(state: GameState, action: Action): GameState {
         ...state,
         profile: { ...state.profile, ...action },
       }
+    case 'ADD_WEIGHT': {
+      const { valueKg } = action
+      if (!Number.isFinite(valueKg) || valueKg <= 0 || valueKg > 500) return state
+      const rest = state.weightHistory.filter((w) => w.date !== state.currentDate)
+      const next = [...rest, { date: state.currentDate, valueKg }].sort((a, b) =>
+        a.date < b.date ? -1 : 1,
+      )
+      return { ...state, weightHistory: next.slice(-520) }
+    }
     case 'TOGGLE_SOUND':
       return { ...state, settings: { ...state.settings, sound: !state.settings.sound } }
     case 'IMPORT_STATE':
@@ -297,6 +307,7 @@ interface GameContextValue {
   swapsLeft: number
   setName: (name: string) => void
   updateProfile: (age: number, heightCm: number, weightKg: number) => void
+  addWeight: (valueKg: number) => void
   toggleSound: () => void
   importState: (json: string) => boolean
   resetGame: () => void
@@ -353,6 +364,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setName: (name) => dispatch({ type: 'SET_NAME', name }),
       updateProfile: (age, heightCm, weightKg) =>
         dispatch({ type: 'UPDATE_PROFILE', age, heightCm, weightKg }),
+      addWeight: (valueKg) => dispatch({ type: 'ADD_WEIGHT', valueKg }),
       toggleSound: () => dispatch({ type: 'TOGGLE_SOUND' }),
       importState: (json) => {
         try {

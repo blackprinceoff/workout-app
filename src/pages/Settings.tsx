@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react'
 import { useGame } from '../state/GameContext'
+import { formatUa } from '../game/dates'
 import {
   Download,
   Save,
+  Scale,
   Settings as SettingsIcon,
   Upload,
   User,
@@ -10,10 +12,25 @@ import {
 } from '../components/Glyphs'
 
 export function Settings() {
-  const { state, setName, updateProfile, toggleSound, importState, resetGame, doExport } = useGame()
+  const { state, setName, updateProfile, addWeight, toggleSound, importState, resetGame, doExport } =
+    useGame()
   const fileRef = useRef<HTMLInputElement>(null)
   const [importError, setImportError] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
+  const latestWeight = state.weightHistory[state.weightHistory.length - 1]?.valueKg ?? state.profile.weightKg
+  const [weightInput, setWeightInput] = useState(String(latestWeight))
+  const [weightSaved, setWeightSaved] = useState(false)
+
+  const recent = state.weightHistory.slice(-6).reverse()
+
+  const saveWeight = () => {
+    const v = Number(weightInput)
+    if (!Number.isFinite(v) || v <= 0 || v > 400) return
+    addWeight(Math.round(v * 10) / 10)
+    setWeightInput(String(Math.round(v * 10) / 10))
+    setWeightSaved(true)
+    window.setTimeout(() => setWeightSaved(false), 2000)
+  }
 
   const applyImport = async (file: File) => {
     const text = await file.text()
@@ -89,6 +106,77 @@ export function Settings() {
             />
           </div>
         </div>
+      </div>
+
+      <div className="panel section-mb">
+        <div className="panel-title">
+          <Scale size={16} /> Вага тіла
+        </div>
+        <div className="settings-row">
+          <div>
+            <div className="settings-label">Щотижневий запис</div>
+            <div className="settings-hint">
+              Один запис на день; зміни видно одразу в списку
+            </div>
+          </div>
+          {weightSaved && (
+            <span style={{ color: 'var(--gold)', fontSize: 13 }}>Записано</span>
+          )}
+        </div>
+        <div className="form-grid">
+          <div className="field">
+            <label htmlFor="weight-value">Вага, кг</label>
+            <input
+              id="weight-value"
+              type="number"
+              min={30}
+              max={400}
+              step={0.1}
+              value={weightInput}
+              onChange={(e) => setWeightInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveWeight()
+              }}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="weight-save">&nbsp;</label>
+            <button id="weight-save" className="btn btn-gold" onClick={saveWeight}>
+              Записати
+            </button>
+          </div>
+        </div>
+        {recent.length > 0 && (
+          <div style={{ marginTop: 8, display: 'grid', gap: 6 }}>
+            {recent.map((w, i) => {
+              const prev = state.weightHistory[state.weightHistory.length - 1 - i - 1]
+              const delta = prev ? w.valueKg - prev.valueKg : null
+              return (
+                <div
+                  key={w.date}
+                  style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}
+                >
+                  <span style={{ color: 'var(--text-dim)' }}>{formatUa(w.date)}</span>
+                  <span>
+                    <strong>{w.valueKg}</strong> кг
+                    {delta !== null && delta !== 0 && (
+                      <span
+                        style={{
+                          marginLeft: 8,
+                          color: delta < 0 ? 'var(--good)' : 'var(--danger)',
+                          fontSize: 12,
+                        }}
+                      >
+                        {delta > 0 ? '+' : ''}
+                        {delta.toFixed(1)}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <div className="panel section-mb">

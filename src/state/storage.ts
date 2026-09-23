@@ -62,6 +62,7 @@ export function createInitialState(): GameState {
     unlockedAchievements: {},
     sickUsed: [],
     habitHistory: [],
+    weightHistory: [],
     swapsUsed: 0,
     soreGroups: [],
     events: [],
@@ -72,7 +73,8 @@ export function createInitialState(): GameState {
  * Міграція старих збережень:
  *  v1 → v2: integrity → habit, без стата discipline;
  *  v2 → v3: sickUsed / habitHistory;
- *  v3 → v4: swapsUsed / soreGroups.
+ *  v3 → v4: swapsUsed / soreGroups;
+ *  v4 → v5: weightHistory.
  */
 function migrateRaw(raw: unknown): unknown {
   if (!raw || typeof raw !== 'object') return raw
@@ -98,6 +100,9 @@ function migrateRaw(raw: unknown): unknown {
   if (version < 4) {
     next.swapsUsed = 0
     next.soreGroups = []
+  }
+  if (version < 5) {
+    next.weightHistory = []
   }
   return next
 }
@@ -146,6 +151,18 @@ export function normalizeState(raw: unknown): GameState | null {
             typeof (h as { value?: unknown }).value === 'number' &&
             Number.isFinite((h as { value?: unknown }).value),
         )
+      : [],
+    weightHistory: Array.isArray(r.weightHistory)
+      ? r.weightHistory.filter((w): w is GameState['weightHistory'][number] => {
+          if (!w || typeof w !== 'object') return false
+          const rec = w as { date?: unknown; valueKg?: unknown }
+          return (
+            isDateKey(rec.date) &&
+            typeof rec.valueKg === 'number' &&
+            Number.isFinite(rec.valueKg) &&
+            rec.valueKg >= 0
+          )
+        })
       : [],
     swapsUsed: typeof r.swapsUsed === 'number' && Number.isFinite(r.swapsUsed) ? r.swapsUsed : 0,
     soreGroups: Array.isArray(r.soreGroups)

@@ -77,6 +77,30 @@ describe('reducer — MARK_SICK_DAY', () => {
   })
 })
 
+describe('reducer — ADD_WEIGHT', () => {
+  it('Додає запис за поточну дату, зберігаючи історію', () => {
+    const s = stateFor({ weightHistory: [{ date: '2026-09-14', valueKg: 80 }] })
+    const next = reducer(s, { type: 'ADD_WEIGHT', valueKg: 79.5 })
+    expect(next.weightHistory).toEqual([
+      { date: '2026-09-14', valueKg: 80 },
+      { date: MONDAY, valueKg: 79.5 },
+    ])
+  })
+
+  it('Замінює попередній запис за ту саму дату', () => {
+    const s = stateFor({ weightHistory: [{ date: MONDAY, valueKg: 80 }] })
+    const next = reducer(s, { type: 'ADD_WEIGHT', valueKg: 79.3 })
+    expect(next.weightHistory).toEqual([{ date: MONDAY, valueKg: 79.3 }])
+  })
+
+  it('Ігнорує невалідні значення', () => {
+    const s = stateFor({ weightHistory: [] })
+    expect(reducer(s, { type: 'ADD_WEIGHT', valueKg: -5 })).toBe(s)
+    expect(reducer(s, { type: 'ADD_WEIGHT', valueKg: NaN })).toBe(s)
+    expect(reducer(s, { type: 'ADD_WEIGHT', valueKg: 600 })).toBe(s)
+  })
+})
+
 describe('reducer — SWAP_QUEST', () => {
   it('Заміна витрачає лічильник і не чіпає виконані квести', () => {
     const quests = generateDailyQuests(MONDAY, 5, 'normal', true)

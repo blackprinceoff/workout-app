@@ -80,6 +80,11 @@ export interface HabitPoint {
   value: number
 }
 
+export interface WeightEntry {
+  date: string
+  valueKg: number
+}
+
 export interface GameState {
   version: number
   createdAt: string
@@ -101,6 +106,7 @@ export interface GameState {
   unlockedAchievements: Record<string, string>
   sickUsed: string[]
   habitHistory: HabitPoint[]
+  weightHistory: WeightEntry[]
   swapsUsed: number
   soreGroups: MuscleGroup[]
   events: GameEvent[]
