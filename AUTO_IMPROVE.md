@@ -6,6 +6,7 @@
 ## Правила перевірки
 
 Після КОЖНОЇ зміни: `npm run test` + `npm run lint` + `npm run build` — усі зелені.
+Кожне завершене покращення = малий коміт + `git push` в `origin/main` (remote не змінювати).
 Зміна балансу XP має тримати `tests/economy.test.ts` у межах (normal 660–800 днів, discipline 320–460).
 
 ## Стан на старт

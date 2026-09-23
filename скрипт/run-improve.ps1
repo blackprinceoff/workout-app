@@ -2,8 +2,8 @@
 # Runs the `improver` agent repeatedly, continuing the SAME opencode session,
 # until the wall-clock timer expires. Prints progress between iterations.
 #
-# Usage:  .\script\run-improve.ps1 -Minutes 60            (inside project)
-#         .\script\run-improve.ps1 -Minutes 90 -IterMinutes 10
+# Usage:  .\скрипт\run-improve.ps1 -Minutes 60            (inside project)
+#         .\скрипт\run-improve.ps1 -Minutes 120 -IterMinutes 10
 #
 # Requires: opencode in PATH, agent `.opencode/agents/improver.md`, AUTO_IMPROVE.md
 param(
@@ -30,7 +30,6 @@ New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 
 $sw = [System.Diagnostics.Stopwatch]::StartNew()
 $deadline = $sw.Elapsed + [TimeSpan]::FromMinutes($Minutes)
-$started = $sw.Elapsed.TotalSeconds
 $iterCount = 0
 $usedSession = $SessionId
 
@@ -97,9 +96,11 @@ do {
     $isFinal = $remainingSec -le ([TimeSpan]::FromMinutes($IterMinutes).TotalSeconds)
 
     if ($isFinal) {
-        $msg = "FINAL ITERATION - almost out of time. Finish the current improvement to a GREEN state (npm run test / lint / build), make the final commit, update AUTO_IMPROVE.md with the session summary and stop. Do not start new large tasks."
+        $msg = "FINAL ITERATION - almost out of time. Finish the current improvement to a GREEN state (npm run test / lint / build), make the final commit and push, update AUTO_IMPROVE.md with the session summary and stop. Do not start new large tasks."
+    } elseif ($iterCount -eq 0) {
+        $msg = "First pass - take a BROAD look at the whole project first: README, NOTES.md, GAME_DESIGN.md, AUTO_IMPROVE.md, the code under src/ and tests/. Understand what already works. Then pick the first most valuable quick improvement from the AUTO_IMPROVE.md queue (or find new ones), implement ONE, run checks (npm run test && npm run lint && npm run build), commit and push, update the journal."
     } else {
-        $msg = "Autonomous iteration $($iterCount + 1). Read AUTO_IMPROVE.md and continue the improvement cycle: implement the next improvement, run checks (npm run test && npm run lint && npm run build), commit, update the journal, then find another improvement."
+        $msg = "Autonomous iteration $($iterCount + 1). Read AUTO_IMPROVE.md and continue the improvement cycle: implement the next improvement, run checks (npm run test && npm run lint && npm run build), commit and push, update the journal, then find another improvement."
     }
 
     $keepGoing = Invoke-Run -Msg $msg -Final $isFinal
