@@ -25,6 +25,12 @@ if (-not (Test-Path (Join-Path $Project 'AUTO_IMPROVE.md'))) {
     exit 1
 }
 
+$cmd = Get-Command opencode.cmd -ErrorAction SilentlyContinue
+if (-not $cmd) { $cmd = Get-Command opencode.ps1 -ErrorAction SilentlyContinue }
+if (-not $cmd) { $cmd = Get-Command opencode -ErrorAction SilentlyContinue }
+$opencodeExe = Join-Path (Split-Path $cmd.Source -Parent) 'node_modules\opencode-ai\bin\opencode.exe'
+if (-not (Test-Path $opencodeExe)) { $opencodeExe = $cmd.Source }
+
 $logDir = Join-Path $PSScriptRoot 'logs'
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 
@@ -51,7 +57,7 @@ function Invoke-Run([string]$Msg, [bool]$Final) {
     $tag = if ($Final) { 'FINAL' } else { 'iter' }
     Write-Host ("[{0}] {1}: launching opencode..." -f $script:iterCount, $tag) -ForegroundColor Yellow
 
-    $p = Start-Process -FilePath 'opencode' -ArgumentList $argsList `
+    $p = Start-Process -FilePath $opencodeExe -ArgumentList $argsList `
         -WorkingDirectory $Project -WindowStyle Hidden `
         -RedirectStandardOutput $logPath -RedirectStandardError $errPath -PassThru
 
@@ -67,7 +73,7 @@ function Invoke-Run([string]$Msg, [bool]$Final) {
 
     if ($script:iterCount -eq 1 -and -not $script:usedSession) {
         try {
-            $sess = & opencode session list -n 1 --format json 2>$null | ConvertFrom-Json
+            $sess = & $opencodeExe session list -n 1 --format json 2>$null | ConvertFrom-Json
             if ($sess -is [array]) { $sess = $sess[0] }
             if ($sess.id) { $script:usedSession = [string]$sess.id }
         } catch { $script:usedSession = '' }
