@@ -2,7 +2,7 @@ import { type CSSProperties, type ReactNode } from 'react'
 import type { GameEvent } from '../game/types'
 import { ACHIEVEMENTS } from '../game/achievements'
 import { Confetti } from './Confetti'
-import { Flame, Sparkles, Swords, Trophy } from './Glyphs'
+import { Flame, HeartPulse, Sparkles, Swords, Trophy } from './Glyphs'
 
 export function EventLayer({ events }: { events: GameEvent[] }) {
   const levelUp = events.find((e) => e.type === 'levelup')
@@ -10,6 +10,7 @@ export function EventLayer({ events }: { events: GameEvent[] }) {
   const achievements = events.filter((e) => e.type === 'achievement')
   const dayComplete = events.some((e) => e.type === 'dayComplete')
   const dayPartial = events.some((e) => e.type === 'dayPartial')
+  const sickDay = events.some((e) => e.type === 'sickDay')
   const record = events.find((e) => e.type === 'newRecord')
 
   return (
@@ -39,6 +40,11 @@ export function EventLayer({ events }: { events: GameEvent[] }) {
         {dayPartial && (
           <Toast>
             <Sparkles size={16} /> День частково зараховано: серія заморожена, звичка +2
+          </Toast>
+        )}
+        {sickDay && (
+          <Toast>
+            <HeartPulse size={16} /> Хворий день зараховано: серія збережена, звичка −5
           </Toast>
         )}
         {record && record.type === 'newRecord' && (
