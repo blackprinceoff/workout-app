@@ -11,6 +11,7 @@ export function EventLayer({ events }: { events: GameEvent[] }) {
   const dayComplete = events.some((e) => e.type === 'dayComplete')
   const dayPartial = events.some((e) => e.type === 'dayPartial')
   const sickDay = events.some((e) => e.type === 'sickDay')
+  const miss = events.some((e) => e.type === 'miss')
   const record = events.find((e) => e.type === 'newRecord')
 
   return (
@@ -45,6 +46,11 @@ export function EventLayer({ events }: { events: GameEvent[] }) {
         {sickDay && (
           <Toast>
             <HeartPulse size={16} /> Хворий день зараховано: серія збережена, звичка −5
+          </Toast>
+        )}
+        {miss && (
+          <Toast>
+            <Flame size={16} /> День пропущено: серія згоріла, звичка −10
           </Toast>
         )}
         {record && record.type === 'newRecord' && (

@@ -231,6 +231,7 @@ export function rollover(state: GameState, todayIso: string = dateKey()): GameSt
         ...next,
         habit: Math.max(0, next.habit - HABIT_MISS_PENALTY),
         streak: 0,
+        events: [...next.events, { type: 'miss' as const }],
       }
     }
 

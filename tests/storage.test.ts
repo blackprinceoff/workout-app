@@ -141,6 +141,12 @@ describe('rollover — скидання й історія', () => {
     expect(next.currentDate).toBe('2020-01-04')
   })
 
+  it('Повний прогул кидає подію miss (тост «серія згоріла»)', () => {
+    const next = rollover(base({ streak: 5, questsByDate: {} }), '2020-01-02')
+    expect(next.events.filter((e) => e.type === 'miss')).toHaveLength(1)
+    expect(next.streak).toBe(0)
+  })
+
   it('Прогалина фіксує звичку в історії за кожен день', () => {
     const next = rollover(base({ questsByDate: {} }), '2020-01-03')
     const days = next.habitHistory.map((p) => p.date)

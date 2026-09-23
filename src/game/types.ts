@@ -73,6 +73,7 @@ export type GameEvent =
   | { type: 'dayPartial' }
   | { type: 'newRecord'; streak: number }
   | { type: 'sickDay' }
+  | { type: 'miss' }
 
 export interface HabitPoint {
   date: string
