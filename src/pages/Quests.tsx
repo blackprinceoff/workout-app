@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useGame } from '../state/GameContext'
 import {
   CATEGORY_LABELS,
@@ -11,7 +12,8 @@ import { formatUa } from '../game/dates'
 import { dayKindOf, effectiveLoad, warmFactor } from '../game/quests'
 import { xpMultiplierParts } from '../game/leveling'
 import type { DailyQuest, Intensity, MuscleGroup } from '../game/types'
-import { CategoryGlyph, Check, RefreshCw, ScrollText, Shield, Sparkles, StatGlyph, Target } from '../components/Glyphs'
+import { CategoryGlyph, Check, RefreshCw, ScrollText, Shield, Sparkles, StatGlyph, Target, Timer } from '../components/Glyphs'
+import { playTimerDone } from '../utils/sound'
 
 const INTENSITIES: Intensity[] = ['light', 'normal', 'intense']
 
@@ -168,6 +170,8 @@ export function Quests() {
         </div>
       </div>
 
+      <BreakTimer />
+
       <div className="panel section-mt" style={{ padding: 12, marginTop: 16 }}>
         <div
           style={{
@@ -257,6 +261,95 @@ function QuestRow({
           </button>
         )}
       </div>
+    </div>
+  )
+}
+
+const BREAK_MINUTES = 5
+
+function BreakTimer() {
+  const { state } = useGame()
+  const [seconds, setSeconds] = useState(BREAK_MINUTES * 60)
+  const [running, setRunning] = useState(false)
+  const [done, setDone] = useState(false)
+
+  useEffect(() => {
+    if (!running) return
+    const id = setInterval(() => {
+      setSeconds((s) => {
+        if (s <= 1) {
+          setRunning(false)
+          setDone(true)
+          if (state.settings.sound) playTimerDone()
+          return BREAK_MINUTES * 60
+        }
+        return s - 1
+      })
+    }, 1000)
+    return () => clearInterval(id)
+  }, [running, state.settings.sound])
+
+  const mm = String(Math.floor(seconds / 60)).padStart(2, '0')
+  const ss = String(seconds % 60).padStart(2, '0')
+
+  return (
+    <div className="panel section-mb" style={{ marginTop: 16, padding: 12 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Timer size={20} color="var(--gold-dim)" />
+          <div>
+            <div className="settings-label">Перерва 5 хв</div>
+            <div className="settings-hint">Відійди від стільця і порухайся</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 26,
+              color: done ? 'var(--good)' : 'var(--gold-bright)',
+              minWidth: 70,
+              textAlign: 'center',
+            }}
+          >
+            {mm}:{ss}
+          </div>
+          <button
+            type="button"
+            className="btn btn-gold btn-sm"
+            onClick={() => {
+              setDone(false)
+              setRunning((r) => !r)
+            }}
+          >
+            {running ? 'Пауза' : 'Старт'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() => {
+              setRunning(false)
+              setDone(false)
+              setSeconds(BREAK_MINUTES * 60)
+            }}
+          >
+            Скинути
+          </button>
+        </div>
+      </div>
+      {done && (
+        <div className="settings-hint" style={{ marginTop: 8, color: 'var(--good)' }}>
+          Перерву завершено — час рухатись!
+        </div>
+      )}
     </div>
   )
 }

@@ -42,3 +42,9 @@ export function playAchievement() {
   tone(659.25, 0, 0.15, 'triangle', 0.1)
   tone(987.77, 0.12, 0.25, 'triangle', 0.1)
 }
+
+export function playTimerDone() {
+  tone(880, 0, 0.18, 'sine', 0.12)
+  tone(880, 0.22, 0.18, 'sine', 0.12)
+  tone(1174.66, 0.44, 0.4, 'sine', 0.12)
+}
