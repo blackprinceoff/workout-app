@@ -281,13 +281,28 @@ function BreakTimer() {
           setRunning(false)
           setDone(true)
           if (state.settings.sound) playTimerDone()
+          if (
+            state.settings.notifications &&
+            typeof window !== 'undefined' &&
+            'Notification' in window &&
+            Notification.permission === 'granted'
+          ) {
+            try {
+              new Notification('FitQuest', {
+                body: 'Перерву завершено — час рухатись!',
+                icon: '/favicon.svg',
+              })
+            } catch {
+              // Ignore notification errors in restrictive environments
+            }
+          }
           return BREAK_MINUTES * 60
         }
         return s - 1
       })
     }, 1000)
     return () => clearInterval(id)
-  }, [running, state.settings.sound])
+  }, [running, state.settings.sound, state.settings.notifications])
 
   const mm = String(Math.floor(seconds / 60)).padStart(2, '0')
   const ss = String(seconds % 60).padStart(2, '0')

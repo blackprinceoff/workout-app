@@ -46,6 +46,7 @@ type Action =
   | { type: 'ADD_WEIGHT'; valueKg: number }
   | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'TOGGLE_SOUND' }
+  | { type: 'TOGGLE_NOTIFICATIONS' }
   | { type: 'IMPORT_STATE'; state: GameState }
   | { type: 'RESET' }
   | { type: 'ROLLOVER' }
@@ -273,6 +274,8 @@ export function reducer(state: GameState, action: Action): GameState {
     }
     case 'TOGGLE_SOUND':
       return { ...state, settings: { ...state.settings, sound: !state.settings.sound } }
+    case 'TOGGLE_NOTIFICATIONS':
+      return { ...state, settings: { ...state.settings, notifications: !state.settings.notifications } }
     case 'COMPLETE_ONBOARDING':
       return { ...state, onboardingDone: true }
     case 'IMPORT_STATE':
@@ -313,6 +316,7 @@ interface GameContextValue {
   addWeight: (valueKg: number) => void
   completeOnboarding: () => void
   toggleSound: () => void
+  toggleNotifications: () => void
   importState: (json: string) => boolean
   resetGame: () => void
   doExport: () => void
@@ -371,6 +375,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
       addWeight: (valueKg) => dispatch({ type: 'ADD_WEIGHT', valueKg }),
       completeOnboarding: () => dispatch({ type: 'COMPLETE_ONBOARDING' }),
       toggleSound: () => dispatch({ type: 'TOGGLE_SOUND' }),
+      toggleNotifications: async () => {
+        if (!state.settings.notifications && typeof window !== 'undefined' && 'Notification' in window) {
+          if (Notification.permission === 'default') {
+            const perm = await Notification.requestPermission()
+            if (perm !== 'granted') return
+          } else if (Notification.permission === 'denied') {
+            return
+          }
+        }
+        dispatch({ type: 'TOGGLE_NOTIFICATIONS' })
+      },
       importState: (json) => {
         try {
           const parsed = normalizeState(JSON.parse(json))

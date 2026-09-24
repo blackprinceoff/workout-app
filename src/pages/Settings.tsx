@@ -2,18 +2,27 @@ import { useRef, useState } from 'react'
 import { useGame } from '../state/GameContext'
 import { formatUa } from '../game/dates'
 import {
+  Bell,
   Download,
   Save,
   Scale,
   Settings as SettingsIcon,
   Upload,
   User,
-  Volume2,
 } from '../components/Glyphs'
 
 export function Settings() {
-  const { state, setName, updateProfile, addWeight, toggleSound, importState, resetGame, doExport } =
-    useGame()
+  const {
+    state,
+    setName,
+    updateProfile,
+    addWeight,
+    toggleSound,
+    toggleNotifications,
+    importState,
+    resetGame,
+    doExport,
+  } = useGame()
   const fileRef = useRef<HTMLInputElement>(null)
   const [importError, setImportError] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
@@ -181,9 +190,22 @@ export function Settings() {
 
       <div className="panel section-mb">
         <div className="panel-title">
-          <Volume2 size={16} /> Звук
+          <Bell size={16} /> Сповіщення та звук
         </div>
         <div className="settings-row">
+          <div>
+            <div className="settings-label">Браузерні сповіщення</div>
+            <div className="settings-hint">Нагадування про закінчення перерви та розминку</div>
+          </div>
+          <button
+            type="button"
+            className={`switch ${state.settings.notifications ? 'on' : ''}`}
+            onClick={() => void toggleNotifications()}
+            aria-label="Перемкнути сповіщення"
+            aria-pressed={state.settings.notifications}
+          />
+        </div>
+        <div className="settings-row" style={{ marginTop: 12 }}>
           <div>
             <div className="settings-label">Звукові ефекти</div>
             <div className="settings-hint">Фанфари та звуки при level-up і досягненнях</div>

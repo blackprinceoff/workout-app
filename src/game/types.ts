@@ -63,6 +63,7 @@ export interface PlayerProfile {
 
 export interface GameSettings {
   sound: boolean
+  notifications: boolean
 }
 
 export type GameEvent =

@@ -36,7 +36,7 @@ export function initialProfile(): PlayerProfile {
 }
 
 export function initialSettings(): GameSettings {
-  return { sound: true }
+  return { sound: true, notifications: false }
 }
 
 export function createInitialState(): GameState {
@@ -76,7 +76,8 @@ export function createInitialState(): GameState {
  *  v2 → v3: sickUsed / habitHistory;
  *  v3 → v4: swapsUsed / soreGroups;
  *  v4 → v5: weightHistory;
- *  v5 → v6: onboardingDone.
+ *  v5 → v6: onboardingDone;
+ *  v6 → v7: settings.notifications.
  */
 function migrateRaw(raw: unknown): unknown {
   if (!raw || typeof raw !== 'object') return raw
@@ -108,6 +109,13 @@ function migrateRaw(raw: unknown): unknown {
   }
   if (version < 6) {
     next.onboardingDone = false
+  }
+  if (version < 7) {
+    const s = (next.settings ?? {}) as Record<string, unknown>
+    if (typeof s.notifications !== 'boolean') {
+      s.notifications = false
+    }
+    next.settings = s
   }
   return next
 }
@@ -142,6 +150,10 @@ export function normalizeState(raw: unknown): GameState | null {
     },
     settings: {
       sound: typeof r.settings?.sound === 'boolean' ? r.settings.sound : base.settings.sound,
+      notifications:
+        typeof r.settings?.notifications === 'boolean'
+          ? r.settings.notifications
+          : base.settings.notifications,
     },
     questsByDate,
     unlockedAchievements:

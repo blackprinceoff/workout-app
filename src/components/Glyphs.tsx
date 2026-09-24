@@ -14,6 +14,7 @@ export {
   Armchair,
   Award,
   BarChart3,
+  Bell,
   CalendarDays,
   Check,
   Crown,
