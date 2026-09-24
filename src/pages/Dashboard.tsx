@@ -3,12 +3,14 @@ import { CLASS_BY_LEVEL, CATEGORY_LABELS, HABIT_DAY_GAIN, STAT_LABELS } from '..
 import { lastNDays } from '../game/dates'
 import { xpMultiplier } from '../game/leveling'
 import { QUEST_TEMPLATES } from '../game/quests'
+import { getCompanionInfo } from '../game/companion'
 import {
   BarChart3,
   CategoryGlyph,
   Flame,
   ScrollText,
   Shield,
+  Sparkles,
   StatGlyph,
   Swords,
   TrendingUp,
@@ -25,6 +27,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
   const totalDone = todayQuests.filter((q) => q.done).length
 
   const mult = xpMultiplier(state.streak, state.habit)
+  const companion = getCompanionInfo(state, todayQuests)
 
   const categories: QuestCategory[] = ['strength', 'core', 'cardio', 'mobility', 'break']
 
@@ -148,6 +151,46 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
                 <div className="stat-value">{value}</div>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="panel section-mb" style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            background: 'var(--gold-dim-bg, rgba(236,200,120,0.15))',
+            border: '1px solid var(--gold-dim)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--gold-bright)',
+            flexShrink: 0,
+          }}
+        >
+          <Sparkles size={24} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--gold-bright)' }}>
+              {companion.name}
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                background: 'var(--surface-raised)',
+                padding: '2px 8px',
+                borderRadius: 4,
+                color: 'var(--text-dim)',
+              }}
+            >
+              {companion.badge}
+            </span>
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text)', marginTop: 4, fontStyle: 'italic' }}>
+            «{companion.quote}»
           </div>
         </div>
       </div>
