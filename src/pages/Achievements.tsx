@@ -1,10 +1,10 @@
 import { useGame } from '../state/GameContext'
-import { ACHIEVEMENTS } from '../game/achievements'
+import { ACHIEVEMENTS, getAchievementProgress } from '../game/achievements'
 import { formatUa } from '../game/dates'
 import { ACHIEVEMENT_ICONS, Check, Glyph, Trophy } from '../components/Glyphs'
 
 export function Achievements() {
-  const { state } = useGame()
+  const { state, level } = useGame()
   const unlocked = Object.keys(state.unlockedAchievements).length
 
   const sorted = [...ACHIEVEMENTS].sort((a, b) => {
@@ -30,6 +30,7 @@ export function Achievements() {
           const date = state.unlockedAchievements[a.id]
           const isUnlocked = Boolean(date)
           const Icon = ACHIEVEMENT_ICONS[a.id]
+          const progress = getAchievementProgress(a.id, state, level.level)
           return (
             <div key={a.id} className={`trophy ${isUnlocked ? 'unlocked' : 'locked'}`}>
               <span className="trophy-icon">
@@ -41,6 +42,11 @@ export function Achievements() {
                 {isUnlocked && (
                   <div className="trophy-date" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <Check size={12} strokeWidth={3} /> {formatUa(date)}
+                  </div>
+                )}
+                {!isUnlocked && progress && (
+                  <div style={{ fontSize: 11, color: 'var(--gold)', marginTop: 4, fontWeight: 600 }}>
+                    Прогрес: {progress}
                   </div>
                 )}
               </div>

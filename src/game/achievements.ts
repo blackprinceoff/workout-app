@@ -145,3 +145,65 @@ export function checkAchievements(state: import('./types').GameState, level: num
   }
   return newly
 }
+
+export function getAchievementProgress(id: string, state: import('./types').GameState, level: number): string | null {
+  if (state.unlockedAchievements[id]) return null
+  switch (id) {
+    case 'first_step':
+      return `${Math.min(1, state.totalQuestsDone)}/1`
+    case 'streak_3':
+      return `${Math.min(3, state.bestStreak)}/3 дн.`
+    case 'streak_7':
+      return `${Math.min(7, state.bestStreak)}/7 дн.`
+    case 'streak_14':
+      return `${Math.min(14, state.bestStreak)}/14 дн.`
+    case 'streak_30':
+      return `${Math.min(30, state.bestStreak)}/30 дн.`
+    case 'streak_66':
+      return `${Math.min(66, state.bestStreak)}/66 дн.`
+    case 'streak_100':
+      return `${Math.min(100, state.bestStreak)}/100 дн.`
+    case 'habit_crafted':
+      return `${Math.min(100, Math.round(state.bestHabit))}/100`
+    case 'level_5':
+      return `${Math.min(5, level)}/5`
+    case 'level_10':
+      return `${Math.min(10, level)}/10`
+    case 'level_20':
+      return `${Math.min(20, level)}/20`
+    case 'level_30':
+      return `${Math.min(30, level)}/30`
+    case 'level_50':
+      return `${Math.min(50, level)}/50`
+    case 'level_100':
+      return `${Math.min(100, level)}/100`
+    case 'quests_25':
+      return `${Math.min(25, state.totalQuestsDone)}/25`
+    case 'quests_100':
+      return `${Math.min(100, state.totalQuestsDone)}/100`
+    case 'quests_500':
+      return `${Math.min(500, state.totalQuestsDone)}/500`
+    case 'quests_1000':
+      return `${Math.min(1000, state.totalQuestsDone)}/1000`
+    case 'balanced': {
+      const count = [
+        state.stats.strength >= 10 ? 1 : 0,
+        state.stats.endurance >= 10 ? 1 : 0,
+        state.stats.agility >= 10 ? 1 : 0,
+      ].reduce((a, b) => a + b, 0)
+      return `${count}/3`
+    }
+    case 'nights_watch':
+      return `${Math.min(10, state.perCategoryDone.break)}/10`
+    case 'boss_week': {
+      const last7 = lastNDays(7, state.currentDate)
+      const completedCount = last7.filter((d) => {
+        const q = state.questsByDate[d]
+        return !!q && q.length > 0 && q.every((x) => x.done)
+      }).length
+      return `${completedCount}/7 днів`
+    }
+    default:
+      return null
+  }
+}

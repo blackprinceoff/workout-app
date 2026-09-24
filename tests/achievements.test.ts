@@ -3,7 +3,7 @@ import { reducer } from '../src/state/GameContext'
 import { createInitialState } from '../src/state/storage'
 import { generateDailyQuests } from '../src/game/quests'
 import { lastNDays } from '../src/game/dates'
-import { checkAchievements } from '../src/game/achievements'
+import { checkAchievements, getAchievementProgress } from '../src/game/achievements'
 import type { GameState } from '../src/game/types'
 
 const MONDAY = '2026-09-21'
@@ -67,5 +67,28 @@ describe('achievement boss_week', () => {
     const won = reducer(s, { type: 'COMPLETE_QUEST', questId: lastUndone.id })
     const revoked = reducer(won, { type: 'UNCOMPLETE_QUEST', questId: lastUndone.id })
     expect(revoked.unlockedAchievements.boss_week).toBe(MONDAY)
+  })
+})
+
+describe('getAchievementProgress', () => {
+  it('повертає правильний прогрес для стрика, рівня та боса тижня', () => {
+    const s: GameState = {
+      ...createInitialState(),
+      bestStreak: 5,
+      bestHabit: 40,
+      totalQuestsDone: 12,
+    }
+    expect(getAchievementProgress('streak_7', s, 3)).toBe('5/7 дн.')
+    expect(getAchievementProgress('level_5', s, 3)).toBe('3/5')
+    expect(getAchievementProgress('habit_crafted', s, 3)).toBe('40/100')
+    expect(getAchievementProgress('quests_25', s, 3)).toBe('12/25')
+  })
+
+  it('повертає null, якщо досягнення вже розблоковане', () => {
+    const s: GameState = {
+      ...createInitialState(),
+      unlockedAchievements: { level_5: '2026-09-21' },
+    }
+    expect(getAchievementProgress('level_5', s, 5)).toBeNull()
   })
 })
