@@ -11,13 +11,13 @@
 #
 # Usage:  .\скрипт\run-improve.ps1 -Minutes 60            (inside project)
 #         .\скрипт\run-improve.ps1 -Minutes 120 -IterMinutes 10          # 2h, 10-min iterations
-#         .\скрипт\run-improve.ps1 -Minutes 360 -IterMinutes 20 -Rpm 12 -MaxRequests 450
+#         .\скрипт\run-improve.ps1 -Minutes 360 -IterMinutes 20 -Rpm 12 -MaxRequests 900
 #
-# Budgets (defaults sized for a Gemini free-tier plan: 15 rpm / 500 req/day):
+# Budgets (defaults sized for a Gemini free-tier plan: 15 rpm / 1000 req/day):
 #   -Rpm 12              paces the upstream so the plan's rpm limit is never hit
-#   -DailyReq 500        HARD daily request cap enforced by the proxy, shared
+#   -DailyReq 1000       HARD daily request cap enforced by the proxy, shared
 #                        across all runs in the same day (persisted in logs/)
-#   -MaxRequests 450     SOFT stop: schedule a FINAL iteration when this run has
+#   -MaxRequests 900     SOFT stop: schedule a FINAL iteration when this run has
 #                        burned that many requests, then stop on a green commit
 #   -MaxInputTokensK 0   optional per-day input-token budget in thousands (0=off)
 #                        NOTE: 250K TPM usually does NOT bind; requests/day does.
@@ -40,8 +40,8 @@ param(
     [string]$SessionId = '',
     [string]$Model = 'google/gemini-3.5-flash-lite',
     [int]$Rpm = 12,
-    [int]$DailyReq = 500,
-    [int]$MaxRequests = 450,
+    [int]$DailyReq = 1000,
+    [int]$MaxRequests = 900,
     [int]$MaxInputTokensK = 0,
     [int]$FreshSessionEvery = 1,
     [int]$Port = 4040,
