@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react'
 import { useGame } from '../state/GameContext'
 import { formatUa } from '../game/dates'
+import { levelInfo, powerScore } from '../game/leveling'
 import {
+  Award,
   Bell,
   Download,
   Save,
@@ -31,6 +33,23 @@ export function Settings() {
   const [weightSaved, setWeightSaved] = useState(false)
 
   const recent = state.weightHistory.slice(-6).reverse()
+
+  const level = levelInfo(state.totalXp)
+  const score = powerScore(state)
+  const [copiedSummary, setCopiedSummary] = useState(false)
+
+  const handleCopySummary = () => {
+    const summary = [
+      `⚔️ FitQuest: ${state.profile.name} (${level.className}) — Рівень ${level.level}`,
+      `🔥 Серія: ${state.streak} дн. (рекорд ${state.bestStreak})`,
+      `🛡️ Звичка: ${Math.round(state.habit)}/100 · Загалом XP: ${Math.floor(state.totalXp)}`,
+      `💪 Сила персонажа: ${score} · Квестів виконано: ${state.totalQuestsDone}`,
+      ` «Шлях від дивана до легенди»`,
+    ].join('\n')
+    navigator.clipboard.writeText(summary)
+    setCopiedSummary(true)
+    window.setTimeout(() => setCopiedSummary(false), 2000)
+  }
 
   const saveWeight = () => {
     const v = Number(weightInput)
@@ -186,6 +205,26 @@ export function Settings() {
             })}
           </div>
         )}
+      </div>
+
+      <div className="panel section-mb">
+        <div className="panel-title">
+          <Award size={16} /> Поділитися прогресом
+        </div>
+        <div className="settings-row" style={{ borderBottom: 'none' }}>
+          <div>
+            <div className="settings-label">Звіт персонажа</div>
+            <div className="settings-hint">Скопіювати текстовий підсумок для щоденника чи друзів</div>
+            {copiedSummary && (
+              <div style={{ color: 'var(--good)', fontSize: 12, marginTop: 4 }}>
+                Звіт скопійовано у буфер обміну! 📋
+              </div>
+            )}
+          </div>
+          <button className="btn btn-gold btn-sm" onClick={handleCopySummary}>
+            <Award size={14} /> Скопіювати звіт
+          </button>
+        </div>
       </div>
 
       <div className="panel section-mb">
