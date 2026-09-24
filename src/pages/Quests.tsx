@@ -8,11 +8,11 @@ import {
   NUDGE_HABIT_BELOW,
   SWAPS_PER_DAY,
 } from '../game/constants'
-import { formatUa } from '../game/dates'
+import { formatUa, shiftDateKey } from '../game/dates'
 import { dayKindOf, effectiveLoad, warmFactor } from '../game/quests'
 import { xpMultiplierParts } from '../game/leveling'
 import type { DailyQuest, Intensity, MuscleGroup } from '../game/types'
-import { CategoryGlyph, Check, RefreshCw, ScrollText, Shield, Sparkles, StatGlyph, Target, Timer } from '../components/Glyphs'
+import { CategoryGlyph, Check, Flame, RefreshCw, ScrollText, Shield, Sparkles, StatGlyph, Target, Timer } from '../components/Glyphs'
 import { playTimerDone } from '../utils/sound'
 
 const INTENSITIES: Intensity[] = ['light', 'normal', 'intense']
@@ -48,6 +48,18 @@ export function Quests() {
 
   const isEvening = new Date().getHours() >= 18
   const showNudge = state.habit < NUDGE_HABIT_BELOW && !hasProgress && isEvening
+
+  const yesterdayKey = shiftDateKey(state.currentDate, -1)
+  const yesterdayQuests = state.questsByDate[yesterdayKey]
+  const missedYesterday =
+    yesterdayQuests &&
+    yesterdayQuests.length > 0 &&
+    !yesterdayQuests.some((q) => q.main && q.done) &&
+    !state.sickUsed.includes(yesterdayKey) &&
+    !hasProgress
+
+  const [dismissedMissBanner, setDismissedMissBanner] = useState(false)
+  const showMissBanner = missedYesterday && !dismissedMissBanner
 
   const toggleSore = (key: MuscleGroup) => {
     const next = state.soreGroups.includes(key)
@@ -137,6 +149,39 @@ export function Quests() {
           стане легшим, у стилі відновлення. Позначення тримаються до кінця дня й скидаються наступного.
         </div>
       </div>
+
+      {showMissBanner && (
+        <div
+          className="nudge"
+          style={{
+            marginBottom: 16,
+            borderColor: 'var(--danger)',
+            background:
+              'linear-gradient(90deg, rgba(239, 106, 106, 0.14), rgba(239, 106, 106, 0.04))',
+            color: 'var(--text)',
+          }}
+        >
+          <Flame size={18} color="var(--danger)" />
+          <span>
+            <strong>Вчора день було пропущено.</strong> Серія згоріла, але новий день — це новий шанс.
+            Навіть один квест сьогодні поверне тебе в ритм!
+          </span>
+          <button
+            type="button"
+            className="btn btn-sm"
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--border-solid)',
+              padding: '4px 8px',
+              color: 'var(--text)',
+            }}
+            onClick={() => setDismissedMissBanner(true)}
+            aria-label="Зрозуміло"
+          >
+            Зрозуміло
+          </button>
+        </div>
+      )}
 
       {allDone && (
         <div className="done-banner" style={{ marginBottom: 16 }}>
