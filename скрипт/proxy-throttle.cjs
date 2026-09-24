@@ -131,7 +131,11 @@ function findUsage(text) {
   return { input, output };
 }
 
-function recordResponse(bodyText, promptEstimate) {
+function recordResponse(statusCode, bodyText, promptEstimate) {
+  if (statusCode < 200 || statusCode >= 400) {
+    console.log('[proxy] upstream ' + statusCode + ' response - NOT counted toward daily budget');
+    return;
+  }
   touchDay();
   usage.requests += 1;
   const u = findUsage(bodyText);
@@ -207,7 +211,7 @@ function handle(req, res) {
             if (!res.destroyed) res.write(c);
           });
           upstreamRes.on('end', () => {
-            recordResponse(collected, estimatePromptTokens(payload));
+            recordResponse(upstreamRes.statusCode, collected, estimatePromptTokens(payload));
             if (!res.destroyed) res.end();
             console.log(
               '[proxy] ' + req.method + ' ' + req.url + ' -> ' + upstreamRes.statusCode +
@@ -238,7 +242,14 @@ function handle(req, res) {
 const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({ ok: true, rpm: RPM, minIntervalMs: MIN_INTERVAL, upstream: UPSTREAM }));
+    res.end(JSON.stringify({
+      ok: true,
+      rpm: RPM,
+      minIntervalMs: MIN_INTERVAL,
+      dailyReq: DAILY_REQ,
+      maxInputK: MAX_INPUT_K,
+      upstream: UPSTREAM,
+    }));
     return;
   }
   if (req.method === 'GET' && req.url === '/usage') {

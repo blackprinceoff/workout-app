@@ -90,11 +90,17 @@ function Start-ThrottleProxy {
     }
     $healthUrl = "http://127.0.0.1:$Port/health"
     try {
-        $resp = Invoke-WebRequest -Uri $healthUrl -UseBasicParsing -TimeoutSec 3 -ErrorAction Stop
-        if ($resp.StatusCode -eq 200) {
-            Write-Host "Throttle proxy already running on :$Port - reusing it." -ForegroundColor Cyan
+        $h = Invoke-RestMethod -Uri $healthUrl -TimeoutSec 3 -ErrorAction Stop
+        $match = ($h.rpm -eq $Rpm) -and ($h.dailyReq -eq $DailyReq) -and ($h.maxInputK -eq $MaxInputTokensK) -and ($h.upstream -eq $ThrottleUpstream)
+        if ($match) {
+            Write-Host "Throttle proxy already running on :$Port with matching config - reusing it." -ForegroundColor Cyan
             return
         }
+        Write-Host "ERROR: throttle proxy already running on :$Port but its config does not match the requested one." -ForegroundColor Red
+        Write-Host ("  running:   rpm=$($h.rpm) dailyReq=$($h.dailyReq) maxInputK=$($h.maxInputK) upstream=$($h.upstream)") -ForegroundColor Red
+        Write-Host ("  requested: rpm=$Rpm dailyReq=$DailyReq maxInputK=$MaxInputTokensK upstream=$ThrottleUpstream") -ForegroundColor Red
+        Write-Host ("  Kill the stale proxy (e.g. Stop-Process -Id (Get-NetTCPConnection -LocalPort $Port).OwningProcess -Force) or pass matching budgets, then re-run.") -ForegroundColor Red
+        exit 1
     } catch {}
 
     $proxyJs = Join-Path $PSScriptRoot 'proxy-throttle.cjs'
@@ -142,6 +148,7 @@ $iterCount = 0
 $script:usedSession = $SessionId
 $script:sessionStartIter = 0
 $script:stoppedNoop = $false
+$script:finalLaunched = $false
 
 $modelLabel = if ($NoThrottle) { "$Agent (default model)" } else { $Model }
 $freshLabel = if ($FreshSessionEvery -le 0) { 'same session (legacy)' } elseif ($FreshSessionEvery -eq 1) { 'fresh session per iteration' } else { "fresh session every $FreshSessionEvery iters" }
@@ -167,8 +174,15 @@ function Test-CarrySession {
     return (($script:iterCount - $script:sessionStartIter) -lt $FreshSessionEvery)
 }
 
+function Test-GreenTree {
+    if (-not (Get-Command git -ErrorAction SilentlyContinue)) { return $false }
+    $dirty = @(& git -C $Project status --porcelain --untracked-files=no 2>&1)
+    return ($LASTEXITCODE -eq 0 -and $dirty.Count -eq 0)
+}
+
 function Invoke-Run([string]$Msg, [bool]$Final) {
     $script:iterCount++
+    if ($Final) { $script:finalLaunched = $true }
     $stamp = Get-Date -Format 'HHmmss'
     $logPath = Join-Path $logDir "iter-$($script:iterCount)-$stamp.log"
     $errPath = Join-Path $logDir "iter-$($script:iterCount)-$stamp.err.log"
@@ -267,11 +281,17 @@ function Invoke-Run([string]$Msg, [bool]$Final) {
             $script:stoppedNoop = $true
             Write-Host ("  !! iteration exited instantly with no output ({0} bytes, exit={1})." -f $bytes, $p.ExitCode) -ForegroundColor Red
             Write-Host "  Provider/model likely unavailable (free-tier quota, 429, or wrong key). Stopping instead of burning the deadline." -ForegroundColor Red
-            return $false
+            return [pscustomobject]@{ keepGoing = $false; green = $false }
         }
     }
 
-    return ($sw.Elapsed.TotalSeconds -lt $deadline.TotalSeconds)
+    $green = Test-GreenTree
+    $greenTag = if ($green) { 'clean (green commit)' } else { 'dirty (WIP carried over)' }
+    Write-Host ("  tree: {0}" -f $greenTag) -ForegroundColor $(if ($green) { 'Green' } else { 'Yellow' })
+    return [pscustomobject]@{
+        keepGoing = ($sw.Elapsed.TotalSeconds -lt $deadline.TotalSeconds)
+        green     = $green
+    }
 }
 
 try {
@@ -287,10 +307,11 @@ try {
         }
 
         if ($isFinal) {
+            $finalGuard = " If the session summary is already committed, do NOT create any more commits - just verify everything is green and stop."
             if ($budgetExhausted) {
-                $msg = "FINAL ITERATION - the usage budget is almost spent (requests=$($usage.requests)/$MaxRequests). Finish the current improvement to a GREEN state (npm run test / lint / build), make the final commit and push, update AUTO_IMPROVE.md with the session summary and stop. Do not start new large tasks."
+                $msg = "FINAL ITERATION - the usage budget is almost spent (requests=$($usage.requests)/$MaxRequests). Finish the current improvement to a GREEN state (npm run test / lint / build), make the final commit and push, update AUTO_IMPROVE.md with the session summary and stop. Do not start new large tasks." + $finalGuard
             } else {
-                $msg = "FINAL ITERATION - almost out of time. Finish the current improvement to a GREEN state (npm run test / lint / build), make the final commit and push, update AUTO_IMPROVE.md with the session summary and stop. Do not start new large tasks."
+                $msg = "FINAL ITERATION - almost out of time. Finish the current improvement to a GREEN state (npm run test / lint / build), make the final commit and push, update AUTO_IMPROVE.md with the session summary and stop. Do not start new large tasks." + $finalGuard
             }
         } elseif ($iterCount -eq 0) {
             $msg = "First pass - IF 'git status --porcelain --untracked-files=no' shows uncommitted changes carried over from a previous session, FINISH and commit them FIRST (check git diff, run the checks, commit). Then take a BROAD look at the whole project: README, NOTES.md, GAME_DESIGN.md, AUTO_IMPROVE.md, the code under src/ and tests/. Understand what already works. Then pick the first most valuable quick improvement from the AUTO_IMPROVE.md queue (or find new ones), implement ONE, run checks (npm run test && npm run lint && npm run build), commit and push, update the journal."
@@ -298,7 +319,8 @@ try {
             $msg = "Autonomous iteration $($iterCount + 1). IF 'git status --porcelain --untracked-files=no' shows uncommitted changes carried over from the previous session, FINISH and commit them FIRST (git diff, run the checks, commit, push). Then read AUTO_IMPROVE.md and continue the improvement cycle: implement the next improvement, run checks (npm run test && npm run lint && npm run build), commit and push, update the journal, then find another improvement."
         }
 
-        $keepGoing = Invoke-Run -Msg $msg -Final $isFinal
+        $result = Invoke-Run -Msg $msg -Final $isFinal
+        $keepGoing = $result.keepGoing
 
         if ($usage) {
             $usageLine = "usage: req=$($usage.requests)/$MaxRequests (hard $DailyReq/day)"
@@ -307,7 +329,16 @@ try {
         }
 
         if ($budgetExhausted) {
-            Write-Host '  -> budget reached: stopping after a green FINAL iteration.' -ForegroundColor Yellow
+            Write-Host '  -> budget reached.' -ForegroundColor Yellow
+            $keepGoing = $false
+        }
+
+        if ($isFinal) {
+            if ($result.green) {
+                Write-Host '  -> final iteration finished on a green commit - stopping the loop.' -ForegroundColor Green
+            } else {
+                Write-Host '  -> final iteration done with leftover WIP (end-of-run checkpoint preserves it) - stopping the loop.' -ForegroundColor Yellow
+            }
             $keepGoing = $false
         }
     } while ($keepGoing -and $sw.Elapsed -lt $deadline)
