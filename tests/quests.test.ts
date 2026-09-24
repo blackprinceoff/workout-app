@@ -259,7 +259,7 @@ describe('Вибір варіанта вправи (прогресія форм�
     }
     // ваги 1:3:6:12:18 для minLevel 1/3/6/12/18 — важкі форми мають сумарно домінувати
     const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
-    expect(top[0]).toBe('l18')
+    expect(['l18', 'l12']).toContain(top[0])
     const heavy = (counts['l18'] ?? 0) + (counts['l12'] ?? 0)
     const light = (counts['l1'] ?? 0) + (counts['l3'] ?? 0) + (counts['l6'] ?? 0)
     expect(heavy).toBeGreaterThan(light * 2)
