@@ -8,6 +8,7 @@ import {
   Crown,
   Flame,
   Medal,
+  Shield,
   Swords,
   TrendingUp,
   Trophy,
@@ -32,6 +33,23 @@ export function Progress() {
     const qs = state.questsByDate[d] ?? []
     return qs.length > 0 && qs.every((q) => q.done)
   }).length
+
+  const muscleCounts = useMemo(() => {
+    const counts: Record<string, number> = { push: 0, leg: 0, core: 0 }
+    for (const quests of Object.values(state.questsByDate)) {
+      for (const q of quests) {
+        if (q.done && q.muscle && counts[q.muscle] !== undefined) {
+          counts[q.muscle]++
+        }
+      }
+    }
+    return counts
+  }, [state.questsByDate])
+
+  const totalMuscle = muscleCounts.push + muscleCounts.leg + muscleCounts.core || 1
+  const pushPct = (muscleCounts.push / totalMuscle) * 100
+  const legPct = (muscleCounts.leg / totalMuscle) * 100
+  const corePct = (muscleCounts.core / totalMuscle) * 100
 
   return (
     <>
@@ -140,6 +158,34 @@ export function Progress() {
               )
             })}
           </div>
+        </div>
+      </div>
+
+      <div className="panel section-mb">
+        <div className="panel-title">
+          <Shield size={16} /> Баланс м'язових груп
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+          Розподіл виконаних силових вправ за групами м'язів (руки/плечі, ноги, спина/кор).
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 14 }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--gold-bright)' }}>{muscleCounts.push}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase' }}>Руки / плечі</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--gold-bright)' }}>{muscleCounts.leg}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase' }}>Ноги</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--gold-bright)' }}>{muscleCounts.core}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase' }}>Спина / кор</div>
+          </div>
+        </div>
+        <div className="bar" style={{ height: 8, display: 'flex', borderRadius: 4, overflow: 'hidden', background: 'var(--surface-raised)' }}>
+          <div style={{ width: `${pushPct}%`, background: 'var(--gold)' }} title={`Push: ${muscleCounts.push}`} />
+          <div style={{ width: `${legPct}%`, background: 'var(--gold-dim)' }} title={`Leg: ${muscleCounts.leg}`} />
+          <div style={{ width: `${corePct}%`, background: 'var(--success)' }} title={`Core: ${muscleCounts.core}`} />
         </div>
       </div>
 
