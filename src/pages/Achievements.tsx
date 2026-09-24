@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useGame } from '../state/GameContext'
 import { ACHIEVEMENTS, getAchievementProgress } from '../game/achievements'
 import { formatUa } from '../game/dates'
@@ -5,6 +6,7 @@ import { ACHIEVEMENT_ICONS, Check, Glyph, Trophy } from '../components/Glyphs'
 
 export function Achievements() {
   const { state, level } = useGame()
+  const [filter, setFilter] = useState<'all' | 'unlocked' | 'locked'>('all')
   const unlocked = Object.keys(state.unlockedAchievements).length
 
   const sorted = [...ACHIEVEMENTS].sort((a, b) => {
@@ -16,6 +18,13 @@ export function Achievements() {
     return 0
   })
 
+  const filtered = sorted.filter((a) => {
+    const isUnlocked = Boolean(state.unlockedAchievements[a.id])
+    if (filter === 'unlocked') return isUnlocked
+    if (filter === 'locked') return !isUnlocked
+    return true
+  })
+
   return (
     <>
       <h1 className="page-title">
@@ -25,8 +34,41 @@ export function Achievements() {
         Досягнень відкрито: {unlocked} з {ACHIEVEMENTS.length}
       </p>
 
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }} role="tablist" aria-label="Фільтр трофеїв">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={filter === 'all'}
+          aria-pressed={filter === 'all'}
+          className={`btn btn-sm ${filter === 'all' ? 'btn-gold' : ''}`}
+          onClick={() => setFilter('all')}
+        >
+          Усі ({ACHIEVEMENTS.length})
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={filter === 'unlocked'}
+          aria-pressed={filter === 'unlocked'}
+          className={`btn btn-sm ${filter === 'unlocked' ? 'btn-gold' : ''}`}
+          onClick={() => setFilter('unlocked')}
+        >
+          Відкриті ({unlocked})
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={filter === 'locked'}
+          aria-pressed={filter === 'locked'}
+          className={`btn btn-sm ${filter === 'locked' ? 'btn-gold' : ''}`}
+          onClick={() => setFilter('locked')}
+        >
+          Заблоковані ({ACHIEVEMENTS.length - unlocked})
+        </button>
+      </div>
+
       <div className="trophy-grid">
-        {sorted.map((a) => {
+        {filtered.map((a) => {
           const date = state.unlockedAchievements[a.id]
           const isUnlocked = Boolean(date)
           const Icon = ACHIEVEMENT_ICONS[a.id]
