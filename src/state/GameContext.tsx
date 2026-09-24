@@ -418,5 +418,6 @@ function playSoundsForEvents(events: GameEvent[], enabled: boolean) {
   const hasAchievement = events.some((e) => e.type === 'achievement')
   if (hasLevelUp) void playLevelUp()
   else if (hasAchievement) void playAchievement()
-  else if (events.some((e) => e.type === 'dayComplete')) void playQuest()
+  else if (events.some((e) => e.type === 'dayComplete')) void playAchievement()
+  else if (events.some((e) => e.type === 'dayPartial')) void playQuest()
 }

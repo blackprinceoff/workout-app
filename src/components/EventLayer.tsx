@@ -26,6 +26,7 @@ export function EventLayer({ events }: { events: GameEvent[] }) {
           <Confetti />
         </>
       )}
+      {dayComplete && <Confetti />}
       <div className="toast-area" role="status" aria-live="polite">
         {achievements.length > 0 &&
           achievements.map((e, i) =>
