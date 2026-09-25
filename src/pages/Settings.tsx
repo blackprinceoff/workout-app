@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useGame } from '../state/GameContext'
 import { formatUa } from '../game/dates'
 import { levelInfo, powerScore } from '../game/leveling'
+import { playAchievement } from '../utils/sound'
 import {
   Award,
   Bell,
@@ -295,13 +296,24 @@ export function Settings() {
             <div className="settings-label">Звукові ефекти</div>
             <div className="settings-hint">Фанфари та звуки при level-up і досягненнях</div>
           </div>
-          <button
-            type="button"
-            className={`switch ${state.settings.sound ? 'on' : ''}`}
-            onClick={toggleSound}
-            aria-label="Перемкнути звук"
-            aria-pressed={state.settings.sound}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              type="button"
+              className="btn btn-sm"
+              style={{ background: 'transparent', border: '1px solid var(--border-solid)', color: 'var(--text)' }}
+              onClick={playAchievement}
+              title="Перевірити звук"
+            >
+              🔊 Тест
+            </button>
+            <button
+              type="button"
+              className={`switch ${state.settings.sound ? 'on' : ''}`}
+              onClick={toggleSound}
+              aria-label="Перемкнути звук"
+              aria-pressed={state.settings.sound}
+            />
+          </div>
         </div>
         <div className="settings-row" style={{ marginTop: 12 }}>
           <div>
