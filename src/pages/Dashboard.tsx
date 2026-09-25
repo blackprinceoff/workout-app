@@ -1,6 +1,6 @@
 import { useGame } from '../state/GameContext'
 import { CLASS_BY_LEVEL, CATEGORY_LABELS, HABIT_DAY_GAIN, STAT_LABELS } from '../game/constants'
-import { lastNDays } from '../game/dates'
+import { lastNDays, shiftDateKey } from '../game/dates'
 import { xpMultiplier } from '../game/leveling'
 import { QUEST_TEMPLATES } from '../game/quests'
 import { getCompanionInfo } from '../game/companion'
@@ -59,12 +59,50 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
     .slice(0, 3)
   const nextClass = CLASS_BY_LEVEL.find((r) => r.minLevel > level.level)
 
+  const yesterdayKey = shiftDateKey(state.currentDate, -1)
+  const yesterdayQuests = state.questsByDate[yesterdayKey]
+  const missedYesterday =
+    yesterdayQuests &&
+    yesterdayQuests.length > 0 &&
+    !yesterdayQuests.some((q) => q.main && q.done) &&
+    !state.sickUsed.includes(yesterdayKey) &&
+    totalDone === 0
+  const showBossSad = missedYesterday || (state.habit < 30 && state.streak === 0 && totalDone === 0)
+
   return (
     <>
       <h1 className="page-title">
         <Swords size={24} strokeWidth={1.6} /> Персонаж
       </h1>
       <p className="page-sub">Твій шлях від дивана до легенди</p>
+
+      {showBossSad && (
+        <div
+          className="nudge section-mb"
+          style={{
+            borderColor: 'var(--danger)',
+            background:
+              'linear-gradient(90deg, rgba(239, 106, 106, 0.16), rgba(239, 106, 106, 0.04))',
+            color: 'var(--text)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
+          <Flame size={20} color="var(--danger)" />
+          <div style={{ flex: 1 }}>
+            <strong style={{ color: 'var(--danger)' }}>Бос сумує через прогул!</strong> Дисципліна падає, серія на нулі. Зроби сьогодні хоча б один квест, щоб відновити темп!
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm btn-gold"
+            onClick={() => onNavigate('quests')}
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            До квестів
+          </button>
+        </div>
+      )}
 
       <div className="hero-row">
         <div className="panel panel-gold">
