@@ -381,7 +381,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       todayQuests,
       level,
       statsList,
-      completeQuest: (questId) => dispatch({ type: 'COMPLETE_QUEST', questId }),
+      completeQuest: (questId) => {
+        if (state.settings.sound) {
+          playQuest()
+        }
+        dispatch({ type: 'COMPLETE_QUEST', questId })
+      },
       undoQuest: (questId) => dispatch({ type: 'UNCOMPLETE_QUEST', questId }),
       setIntensity: (intensity) => dispatch({ type: 'SET_INTENSITY', intensity }),
       markSickDay: () => dispatch({ type: 'MARK_SICK_DAY' }),
