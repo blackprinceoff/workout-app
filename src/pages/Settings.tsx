@@ -61,6 +61,21 @@ export function Settings() {
     window.setTimeout(() => setWeightSaved(false), 2000)
   }
 
+  const exportWeightCsv = () => {
+    if (!state.weightHistory.length) return
+    const rows = ['Дата,Вага (кг)']
+    for (const w of state.weightHistory) {
+      rows.push(`${w.date},${w.valueKg}`)
+    }
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'fitquest-weight-history.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const applyImport = async (file: File) => {
     const text = await file.text()
     const ok = importState(text)
@@ -176,35 +191,47 @@ export function Settings() {
           </div>
         </div>
         {recent.length > 0 && (
-          <div style={{ marginTop: 8, display: 'grid', gap: 6 }}>
-            {recent.map((w, i) => {
-              const prev = state.weightHistory[state.weightHistory.length - 1 - i - 1]
-              const delta = prev ? w.valueKg - prev.valueKg : null
-              return (
-                <div
-                  key={w.date}
-                  style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}
-                >
-                  <span style={{ color: 'var(--text-dim)' }}>{formatUa(w.date)}</span>
-                  <span>
-                    <strong>{w.valueKg}</strong> кг
-                    {delta !== null && delta !== 0 && (
-                      <span
-                        style={{
-                          marginLeft: 8,
-                          color: delta < 0 ? 'var(--good)' : 'var(--danger)',
-                          fontSize: 12,
-                        }}
-                      >
-                        {delta > 0 ? '+' : ''}
-                        {delta.toFixed(1)}
-                      </span>
-                    )}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
+          <>
+            <div style={{ marginTop: 8, display: 'grid', gap: 6 }}>
+              {recent.map((w, i) => {
+                const prev = state.weightHistory[state.weightHistory.length - 1 - i - 1]
+                const delta = prev ? w.valueKg - prev.valueKg : null
+                return (
+                  <div
+                    key={w.date}
+                    style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}
+                  >
+                    <span style={{ color: 'var(--text-dim)' }}>{formatUa(w.date)}</span>
+                    <span>
+                      <strong>{w.valueKg}</strong> кг
+                      {delta !== null && delta !== 0 && (
+                        <span
+                          style={{
+                            marginLeft: 8,
+                            color: delta < 0 ? 'var(--good)' : 'var(--danger)',
+                            fontSize: 12,
+                          }}
+                        >
+                          {delta > 0 ? '+' : ''}
+                          {delta.toFixed(1)}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                className="btn btn-sm"
+                style={{ background: 'transparent', border: '1px solid var(--border-solid)', color: 'var(--text)' }}
+                onClick={exportWeightCsv}
+              >
+                Експорт історії ваги у CSV
+              </button>
+            </div>
+          </>
         )}
       </div>
 
