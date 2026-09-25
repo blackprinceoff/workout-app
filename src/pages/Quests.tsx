@@ -10,7 +10,7 @@ import {
 } from '../game/constants'
 import { formatUa, shiftDateKey } from '../game/dates'
 import { dayKindOf, effectiveLoad, warmFactor } from '../game/quests'
-import { xpMultiplierParts } from '../game/leveling'
+import { classNameFor, levelInfo, xpMultiplierParts } from '../game/leveling'
 import type { DailyQuest, Intensity, MuscleGroup } from '../game/types'
 import { CategoryGlyph, Check, Flame, RefreshCw, ScrollText, Shield, Sparkles, StatGlyph, Target, Timer } from '../components/Glyphs'
 import { playTimerDone } from '../utils/sound'
@@ -310,16 +310,22 @@ function QuestRow({
   )
 }
 
-const BREAK_MINUTES = 5
+const BREAK_PRESETS = [3, 5, 10]
 
 function BreakTimer() {
   const { state } = useGame()
-  const [seconds, setSeconds] = useState(BREAK_MINUTES * 60)
+  const [duration, setDuration] = useState(5)
+  const [seconds, setSeconds] = useState(5 * 60)
   const [running, setRunning] = useState(false)
   const [done, setDone] = useState(false)
+  const currentLevel = levelInfo(state.totalXp).level
 
   useEffect(() => {
-    if (!running) return
+    if (!running) {
+      document.title = `FitQuest — ${classNameFor(currentLevel)} · ${currentLevel}`
+      return
+    }
+
     const id = setInterval(() => {
       setSeconds((s) => {
         if (s <= 1) {
@@ -341,13 +347,27 @@ function BreakTimer() {
               // Ignore notification errors in restrictive environments
             }
           }
-          return BREAK_MINUTES * 60
+          document.title = `FitQuest — ${classNameFor(currentLevel)} · ${currentLevel}`
+          return duration * 60
         }
-        return s - 1
+        const nextS = s - 1
+        const mm = String(Math.floor(nextS / 60)).padStart(2, '0')
+        const ss = String(nextS % 60).padStart(2, '0')
+        document.title = `(${mm}:${ss}) FitQuest — Перерва`
+        return nextS
       })
     }, 1000)
-    return () => clearInterval(id)
-  }, [running, state.settings.sound, state.settings.notifications])
+
+    const mm = String(Math.floor(seconds / 60)).padStart(2, '0')
+    const ss = String(seconds % 60).padStart(2, '0')
+    document.title = `(${mm}:${ss}) FitQuest — Перерва`
+
+    return () => {
+      clearInterval(id)
+      document.title = `FitQuest — ${classNameFor(currentLevel)} · ${currentLevel}`
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running, duration, state.settings.sound, state.settings.notifications, currentLevel])
 
   const mm = String(Math.floor(seconds / 60)).padStart(2, '0')
   const ss = String(seconds % 60).padStart(2, '0')
@@ -366,11 +386,29 @@ function BreakTimer() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Timer size={20} color="var(--gold-dim)" />
           <div>
-            <div className="settings-label">Перерва 5 хв</div>
+            <div className="settings-label">Перерва ({duration} хв)</div>
             <div className="settings-hint">Відійди від стільця і порухайся</div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          {!running && !done && (
+            <div style={{ display: 'flex', gap: 4 }}>
+              {BREAK_PRESETS.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  className={`btn btn-sm ${duration === m ? 'btn-gold' : ''}`}
+                  onClick={() => {
+                    setDuration(m)
+                    setSeconds(m * 60)
+                  }}
+                  style={{ padding: '2px 8px', fontSize: 11 }}
+                >
+                  {m}хв
+                </button>
+              ))}
+            </div>
+          )}
           <div
             style={{
               fontFamily: 'var(--font-display)',
@@ -398,7 +436,7 @@ function BreakTimer() {
             onClick={() => {
               setRunning(false)
               setDone(false)
-              setSeconds(BREAK_MINUTES * 60)
+              setSeconds(duration * 60)
             }}
           >
             Скинути
