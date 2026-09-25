@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { useGame } from '../state/GameContext'
-import { lastNDays, weekdayShort } from '../game/dates'
 import { powerScore } from '../game/leveling'
 import {
   BarChart3,
@@ -8,11 +7,13 @@ import {
   Crown,
   Flame,
   Medal,
+  Scale,
   Shield,
   Swords,
   TrendingUp,
   Trophy,
 } from '../components/Glyphs'
+import { formatUa, lastNDays, weekdayShort } from '../game/dates'
 
 export function Progress() {
   const { state } = useGame()
@@ -50,6 +51,11 @@ export function Progress() {
   const pushPct = (muscleCounts.push / totalMuscle) * 100
   const legPct = (muscleCounts.leg / totalMuscle) * 100
   const corePct = (muscleCounts.core / totalMuscle) * 100
+
+  const latestWeight = state.weightHistory[state.weightHistory.length - 1]?.valueKg ?? state.profile.weightKg
+  const weightDelta = state.weightHistory.length > 1
+    ? latestWeight - state.weightHistory[0].valueKg
+    : 0
 
   return (
     <>
@@ -188,6 +194,45 @@ export function Progress() {
           <div style={{ width: `${corePct}%`, background: 'var(--success)' }} title={`Core: ${muscleCounts.core}`} />
         </div>
       </div>
+
+      {state.weightHistory.length > 0 && (
+        <div className="panel section-mb">
+          <div className="panel-title">
+            <Scale size={16} /> Динаміка ваги тіла
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+            Історія вимірювань ваги ({state.weightHistory.length} записів).
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, fontSize: 13 }}>
+            <span>Початкова: <strong>{state.weightHistory[0].valueKg} кг</strong> ({formatUa(state.weightHistory[0].date)})</span>
+            <span>Поточна: <strong>{latestWeight} кг</strong></span>
+            {state.weightHistory.length > 1 && weightDelta !== 0 && (
+              <span style={{ color: weightDelta < 0 ? 'var(--good)' : 'var(--danger)', fontWeight: 600 }}>
+                {weightDelta > 0 ? '+' : ''}{weightDelta.toFixed(1)} кг
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'grid', gap: 6 }}>
+            {state.weightHistory.slice(-5).reverse().map((w, i) => {
+              const prev = state.weightHistory[state.weightHistory.length - 1 - i - 1]
+              const delta = prev ? w.valueKg - prev.valueKg : null
+              return (
+                <div key={w.date} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-dim)' }}>
+                  <span>{formatUa(w.date)}</span>
+                  <span>
+                    <strong style={{ color: 'var(--text)' }}>{w.valueKg}</strong> кг
+                    {delta !== null && delta !== 0 && (
+                      <span style={{ marginLeft: 6, color: delta < 0 ? 'var(--good)' : 'var(--danger)', fontSize: 12 }}>
+                        {delta > 0 ? '+' : ''}{delta.toFixed(1)}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="panel section-mb">
         <div className="panel-title">
