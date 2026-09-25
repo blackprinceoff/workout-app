@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialState, normalizeState, rollover, sickTokensLeft } from '../src/state/storage'
 import { shiftDateKey } from '../src/game/dates'
+import { STATE_VERSION } from '../src/game/constants'
 import type { DailyQuest, GameState } from '../src/game/types'
 
 const PAST = '2020-01-01'
@@ -224,26 +225,28 @@ describe('normalizeState — міграції', () => {
       stats: { strength: 2, endurance: 1, agility: 1, discipline: 4 },
     }
     const s = normalizeState(raw)!
-    expect(s.version).toBe(8)
+    expect(s.version).toBe(STATE_VERSION)
     expect(s.habit).toBe(0)
     expect('discipline' in s.stats).toBe(false)
     expect(Object.keys(s.stats)).toEqual(['strength', 'endurance', 'agility'])
   })
 
-  it('v2 → v8: додано sickUsed/habitHistory/swapsUsed/soreGroups/weightHistory/onboardingDone/notifications/theme', () => {
+  it('v2 → current: додано sickUsed/habitHistory/swapsUsed/soreGroups/weightHistory/onboardingDone/notifications/theme/notesByDate', () => {
     const raw = { version: 2, totalXp: 100 }
     const s = normalizeState(raw)!
+    expect(s.version).toBe(STATE_VERSION)
     expect(s.sickUsed).toEqual([])
     expect(s.habitHistory).toEqual([])
     expect(s.swapsUsed).toBe(0)
     expect(s.soreGroups).toEqual([])
     expect(s.weightHistory).toEqual([])
+    expect(s.notesByDate).toEqual({})
     expect(s.onboardingDone).toBe(false)
     expect(s.settings.notifications).toBe(false)
     expect(s.settings.theme).toBe('dark')
   })
 
-  it('v3 → v8: додано swapsUsed/soreGroups/weightHistory/onboardingDone/notifications/theme', () => {
+  it('v3 → current: додано swapsUsed/soreGroups/weightHistory/onboardingDone/notifications/theme/notesByDate', () => {
     const raw = {
       version: 3,
       totalXp: 100,
@@ -251,50 +254,55 @@ describe('normalizeState — міграції', () => {
       habitHistory: [{ date: '2020-01-01', value: 40 }],
     }
     const s = normalizeState(raw)!
-    expect(s.version).toBe(8)
+    expect(s.version).toBe(STATE_VERSION)
     expect(s.swapsUsed).toBe(0)
     expect(s.soreGroups).toEqual([])
     expect(s.weightHistory).toEqual([])
+    expect(s.notesByDate).toEqual({})
     expect(s.sickUsed).toEqual(['2020-01-01'])
     expect(s.settings.notifications).toBe(false)
     expect(s.settings.theme).toBe('dark')
   })
 
-  it('v4 → v8: додано weightHistory/onboardingDone/notifications/theme, лишає swaps/sore', () => {
+  it('v4 → current: додано weightHistory/onboardingDone/notifications/theme/notesByDate, лишає swaps/sore', () => {
     const s = normalizeState({ version: 4, totalXp: 100, swapsUsed: 2, soreGroups: ['push'] })!
-    expect(s.version).toBe(8)
+    expect(s.version).toBe(STATE_VERSION)
     expect(s.swapsUsed).toBe(2)
     expect(s.soreGroups).toEqual(['push'])
     expect(s.weightHistory).toEqual([])
+    expect(s.notesByDate).toEqual({})
     expect(s.onboardingDone).toBe(false)
     expect(s.settings.notifications).toBe(false)
     expect(s.settings.theme).toBe('dark')
   })
 
-  it('v5 → v8: додано onboardingDone/notifications/theme, лишає weightHistory', () => {
+  it('v5 → current: додано onboardingDone/notifications/theme/notesByDate, лишає weightHistory', () => {
     const s = normalizeState({ version: 5, totalXp: 100, weightHistory: [{ date: '2026-01-01', valueKg: 80 }] })!
-    expect(s.version).toBe(8)
+    expect(s.version).toBe(STATE_VERSION)
     expect(s.onboardingDone).toBe(false)
     expect(s.weightHistory).toEqual([{ date: '2026-01-01', valueKg: 80 }])
+    expect(s.notesByDate).toEqual({})
     expect(s.settings.notifications).toBe(false)
     expect(s.settings.theme).toBe('dark')
   })
 
-  it('v6 → v8: додано settings.notifications/theme', () => {
+  it('v6 → current: додано settings.notifications/theme/notesByDate', () => {
     const s = normalizeState({ version: 6, totalXp: 100, onboardingDone: true, settings: { sound: false } })!
-    expect(s.version).toBe(8)
+    expect(s.version).toBe(STATE_VERSION)
     expect(s.settings.sound).toBe(false)
     expect(s.settings.notifications).toBe(false)
     expect(s.settings.theme).toBe('dark')
+    expect(s.notesByDate).toEqual({})
   })
 
-  it('v7 → v8: додано settings.theme', () => {
+  it('v7 → current: додано settings.theme/notesByDate', () => {
     const s = normalizeState({ version: 7, totalXp: 100, onboardingDone: true, settings: { sound: true, notifications: true } })!
-    expect(s.version).toBe(8)
+    expect(s.version).toBe(STATE_VERSION)
     expect(s.settings.theme).toBe('dark')
+    expect(s.notesByDate).toEqual({})
   })
 
-  it('v8 лишається без змін', () => {
+  it('v8 → current: додано notesByDate', () => {
     const s = normalizeState({
       version: 8,
       totalXp: 100,
@@ -302,11 +310,29 @@ describe('normalizeState — міграції', () => {
       settings: { sound: true, notifications: true, theme: 'light' },
       weightHistory: [{ date: '2026-01-01', valueKg: 80 }],
     })!
-    expect(s.version).toBe(8)
+    expect(s.version).toBe(STATE_VERSION)
     expect(s.onboardingDone).toBe(true)
     expect(s.settings.notifications).toBe(true)
     expect(s.settings.theme).toBe('light')
     expect(s.weightHistory).toEqual([{ date: '2026-01-01', valueKg: 80 }])
+    expect(s.notesByDate).toEqual({})
+  })
+
+  it('v9 лишається без змін', () => {
+    const s = normalizeState({
+      version: 9,
+      totalXp: 100,
+      onboardingDone: true,
+      settings: { sound: true, notifications: true, theme: 'light' },
+      weightHistory: [{ date: '2026-01-01', valueKg: 80 }],
+      notesByDate: { '2026-01-01': 'Good day' },
+    })!
+    expect(s.version).toBe(STATE_VERSION)
+    expect(s.onboardingDone).toBe(true)
+    expect(s.settings.notifications).toBe(true)
+    expect(s.settings.theme).toBe('light')
+    expect(s.weightHistory).toEqual([{ date: '2026-01-01', valueKg: 80 }])
+    expect(s.notesByDate).toEqual({ '2026-01-01': 'Good day' })
   })
 })
 

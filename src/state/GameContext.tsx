@@ -40,6 +40,7 @@ type Action =
   | { type: 'MARK_SICK_DAY' }
   | { type: 'SWAP_QUEST'; questId: string }
   | { type: 'SET_SORE_GROUPS'; groups: MuscleGroup[] }
+  | { type: 'SET_NOTE'; date: string; text: string }
   | { type: 'CLEAR_EVENTS' }
   | { type: 'SET_NAME'; name: string }
   | { type: 'UPDATE_PROFILE'; age: number; heightCm: number; weightKg: number }
@@ -256,6 +257,14 @@ export function reducer(state: GameState, action: Action): GameState {
         },
       }
     }
+    case 'SET_NOTE':
+      return {
+        ...state,
+        notesByDate: {
+          ...state.notesByDate,
+          [action.date]: action.text,
+        },
+      }
     case 'CLEAR_EVENTS':
       return { ...state, events: [] }
     case 'SET_NAME':
@@ -325,6 +334,7 @@ interface GameContextValue {
   sickDayMarked: boolean
   swapQuest: (questId: string) => void
   setSoreGroups: (groups: MuscleGroup[]) => void
+  setNote: (text: string, date?: string) => void
   swapsLeft: number
   setName: (name: string) => void
   updateProfile: (age: number, heightCm: number, weightKg: number) => void
@@ -394,6 +404,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       sickDayMarked: isSickDayMarked(state),
       swapQuest: (questId) => dispatch({ type: 'SWAP_QUEST', questId }),
       setSoreGroups: (groups) => dispatch({ type: 'SET_SORE_GROUPS', groups }),
+      setNote: (text, date) => dispatch({ type: 'SET_NOTE', date: date || state.currentDate, text }),
       swapsLeft: Math.max(0, SWAPS_PER_DAY - state.swapsUsed),
       setName: (name) => dispatch({ type: 'SET_NAME', name }),
       updateProfile: (age, heightCm, weightKg) =>

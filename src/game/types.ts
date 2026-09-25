@@ -111,6 +111,7 @@ export interface GameState {
   weightHistory: WeightEntry[]
   swapsUsed: number
   soreGroups: MuscleGroup[]
+  notesByDate: Record<string, string>
   onboardingDone: boolean
   events: GameEvent[]
 }

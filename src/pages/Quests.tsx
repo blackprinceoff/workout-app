@@ -35,6 +35,7 @@ export function Quests() {
     sickDayMarked,
     swapQuest,
     setSoreGroups,
+    setNote,
     swapsLeft,
     level,
   } = useGame()
@@ -45,6 +46,7 @@ export function Quests() {
   const load = effectiveLoad(state.currentDate, state.dayIntensity, level.level)
   const mult = xpMultiplierParts(state.streak, state.habit)
   const hasProgress = todayQuests.some((q) => q.done)
+  const currentNote = state.notesByDate[state.currentDate] || ''
 
   const isEvening = new Date().getHours() >= 18
   const showNudge = state.habit < NUDGE_HABIT_BELOW && !hasProgress && isEvening
@@ -147,6 +149,33 @@ export function Quests() {
         <div className="settings-hint" style={{ marginTop: 8 }}>
           Позначені групи автоматично виключаються з силових квестів сьогодні. Якщо болить усе — день
           стане легшим, у стилі відновлення. Позначення тримаються до кінця дня й скидаються наступного.
+        </div>
+      </div>
+
+      <div className="panel section-mb" style={{ padding: 12 }}>
+        <div className="settings-label" style={{ fontSize: 13, marginBottom: 6 }}>
+          📝 Нотатка дня / Самопочуття
+        </div>
+        <textarea
+          value={currentNote}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Як пройшло тренування? Самопочуття, ваги, думки..."
+          maxLength={300}
+          style={{
+            width: '100%',
+            background: 'var(--panel-sub)',
+            color: 'var(--text)',
+            border: '1px solid var(--border)',
+            borderRadius: 6,
+            padding: '8px 10px',
+            fontSize: 14,
+            resize: 'vertical',
+            minHeight: 60,
+            fontFamily: 'inherit',
+          }}
+        />
+        <div className="settings-hint" style={{ marginTop: 4 }}>
+          Зберігається автоматично для цього дня.
         </div>
       </div>
 

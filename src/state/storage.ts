@@ -65,6 +65,7 @@ export function createInitialState(): GameState {
     weightHistory: [],
     swapsUsed: 0,
     soreGroups: [],
+    notesByDate: {},
     onboardingDone: false,
     events: [],
   }
@@ -124,6 +125,9 @@ function migrateRaw(raw: unknown): unknown {
       s.theme = 'dark'
     }
     next.settings = s
+  }
+  if (version < 9) {
+    next.notesByDate = {}
   }
   return next
 }
@@ -194,6 +198,14 @@ export function normalizeState(raw: unknown): GameState | null {
     soreGroups: Array.isArray(r.soreGroups)
       ? r.soreGroups.filter((g): g is MuscleGroup => typeof g === 'string')
       : [],
+    notesByDate:
+      typeof r.notesByDate === 'object' && r.notesByDate !== null
+        ? Object.fromEntries(
+            Object.entries(r.notesByDate).filter(
+              ([k, v]) => isDateKey(k) && typeof v === 'string',
+            ),
+          )
+        : {},
     onboardingDone: r.onboardingDone === true,
     events: [],
   }
