@@ -57,6 +57,13 @@ export function Progress() {
     ? latestWeight - state.weightHistory[0].valueKg
     : 0
 
+  const recentNotes = useMemo(() => {
+    return Object.entries(state.notesByDate || {})
+      .filter(([, text]) => text.trim().length > 0)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .slice(0, 5)
+  }, [state.notesByDate])
+
   return (
     <>
       <h1 className="page-title">
@@ -230,6 +237,25 @@ export function Progress() {
                 </div>
               )
             })}
+          </div>
+        </div>
+      )}
+
+      {recentNotes.length > 0 && (
+        <div className="panel section-mb">
+          <div className="panel-title">
+            📝 Журнал нотаток дня
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+            Останні записи самопочуття та рефлексії тренувань.
+          </p>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {recentNotes.map(([date, text]) => (
+              <div key={date} style={{ background: 'var(--panel-sub)', padding: '10px 12px', borderRadius: 6, fontSize: 13 }}>
+                <div style={{ color: 'var(--gold)', fontWeight: 600, marginBottom: 4 }}>{formatUa(date)}</div>
+                <div style={{ color: 'var(--text)', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{text}</div>
+              </div>
+            ))}
           </div>
         </div>
       )}
