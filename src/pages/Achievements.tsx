@@ -7,6 +7,7 @@ import { ACHIEVEMENT_ICONS, Check, Glyph, Trophy } from '../components/Glyphs'
 export function Achievements() {
   const { state, level } = useGame()
   const [filter, setFilter] = useState<'all' | 'unlocked' | 'locked'>('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const unlocked = Object.keys(state.unlockedAchievements).length
 
   const sorted = [...ACHIEVEMENTS].sort((a, b) => {
@@ -20,8 +21,14 @@ export function Achievements() {
 
   const filtered = sorted.filter((a) => {
     const isUnlocked = Boolean(state.unlockedAchievements[a.id])
-    if (filter === 'unlocked') return isUnlocked
-    if (filter === 'locked') return !isUnlocked
+    if (filter === 'unlocked' && !isUnlocked) return false
+    if (filter === 'locked' && isUnlocked) return false
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      const matchTitle = a.title.toLowerCase().includes(q)
+      const matchDesc = a.description.toLowerCase().includes(q)
+      if (!matchTitle && !matchDesc) return false
+    }
     return true
   })
 
@@ -34,7 +41,7 @@ export function Achievements() {
         Досягнень відкрито: {unlocked} з {ACHIEVEMENTS.length}
       </p>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }} role="tablist" aria-label="Фільтр трофеїв">
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }} role="tablist" aria-label="Фільтр трофеїв">
         <button
           type="button"
           role="tab"
@@ -65,6 +72,24 @@ export function Achievements() {
         >
           Заблоковані ({ACHIEVEMENTS.length - unlocked})
         </button>
+        <input
+          type="text"
+          placeholder="Пошук трофеїв..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          aria-label="Пошук трофеїв"
+          style={{
+            padding: '6px 12px',
+            borderRadius: 6,
+            border: '1px solid var(--border-solid)',
+            background: 'var(--surface-raised)',
+            color: 'var(--text)',
+            fontSize: 14,
+            outline: 'none',
+            flex: '1 1 160px',
+            minWidth: 140,
+          }}
+        />
       </div>
 
       <div className="trophy-grid">
