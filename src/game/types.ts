@@ -64,6 +64,7 @@ export interface PlayerProfile {
 export interface GameSettings {
   sound: boolean
   notifications: boolean
+  theme: 'dark' | 'light'
 }
 
 export type GameEvent =

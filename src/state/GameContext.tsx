@@ -47,6 +47,7 @@ type Action =
   | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'TOGGLE_SOUND' }
   | { type: 'TOGGLE_NOTIFICATIONS' }
+  | { type: 'TOGGLE_THEME' }
   | { type: 'IMPORT_STATE'; state: GameState }
   | { type: 'RESET' }
   | { type: 'ROLLOVER' }
@@ -276,6 +277,14 @@ export function reducer(state: GameState, action: Action): GameState {
       return { ...state, settings: { ...state.settings, sound: !state.settings.sound } }
     case 'TOGGLE_NOTIFICATIONS':
       return { ...state, settings: { ...state.settings, notifications: !state.settings.notifications } }
+    case 'TOGGLE_THEME':
+      return {
+        ...state,
+        settings: {
+          ...state.settings,
+          theme: state.settings.theme === 'light' ? 'dark' : 'light',
+        },
+      }
     case 'COMPLETE_ONBOARDING':
       return { ...state, onboardingDone: true }
     case 'IMPORT_STATE':
@@ -317,6 +326,7 @@ interface GameContextValue {
   completeOnboarding: () => void
   toggleSound: () => void
   toggleNotifications: () => void
+  toggleTheme: () => void
   importState: (json: string) => boolean
   resetGame: () => void
   doExport: () => void
@@ -330,6 +340,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     saveState(state)
   }, [state])
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', state.settings.theme)
+  }, [state.settings.theme])
 
   useEffect(() => {
     const timer = setInterval(() => dispatch({ type: 'ROLLOVER' }), 30_000)
@@ -386,6 +400,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         }
         dispatch({ type: 'TOGGLE_NOTIFICATIONS' })
       },
+      toggleTheme: () => dispatch({ type: 'TOGGLE_THEME' }),
       importState: (json) => {
         try {
           const parsed = normalizeState(JSON.parse(json))

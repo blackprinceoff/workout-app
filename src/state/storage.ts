@@ -36,7 +36,7 @@ export function initialProfile(): PlayerProfile {
 }
 
 export function initialSettings(): GameSettings {
-  return { sound: true, notifications: false }
+  return { sound: true, notifications: false, theme: 'dark' }
 }
 
 export function createInitialState(): GameState {
@@ -77,7 +77,8 @@ export function createInitialState(): GameState {
  *  v3 → v4: swapsUsed / soreGroups;
  *  v4 → v5: weightHistory;
  *  v5 → v6: onboardingDone;
- *  v6 → v7: settings.notifications.
+ *  v6 → v7: settings.notifications;
+ *  v7 → v8: settings.theme.
  */
 function migrateRaw(raw: unknown): unknown {
   if (!raw || typeof raw !== 'object') return raw
@@ -114,6 +115,13 @@ function migrateRaw(raw: unknown): unknown {
     const s = (next.settings ?? {}) as Record<string, unknown>
     if (typeof s.notifications !== 'boolean') {
       s.notifications = false
+    }
+    next.settings = s
+  }
+  if (version < 8) {
+    const s = (next.settings ?? {}) as Record<string, unknown>
+    if (s.theme !== 'light' && s.theme !== 'dark') {
+      s.theme = 'dark'
     }
     next.settings = s
   }
@@ -154,6 +162,7 @@ export function normalizeState(raw: unknown): GameState | null {
         typeof r.settings?.notifications === 'boolean'
           ? r.settings.notifications
           : base.settings.notifications,
+      theme: r.settings?.theme === 'light' ? 'light' : 'dark',
     },
     questsByDate,
     unlockedAchievements:

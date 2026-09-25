@@ -21,6 +21,7 @@ export function Settings() {
     addWeight,
     toggleSound,
     toggleNotifications,
+    toggleTheme,
     importState,
     resetGame,
     doExport,
@@ -255,6 +256,19 @@ export function Settings() {
             onClick={toggleSound}
             aria-label="Перемкнути звук"
             aria-pressed={state.settings.sound}
+          />
+        </div>
+        <div className="settings-row" style={{ marginTop: 12 }}>
+          <div>
+            <div className="settings-label">Світла тема оформлення</div>
+            <div className="settings-hint">Перемикання між темною та світлою палітрою</div>
+          </div>
+          <button
+            type="button"
+            className={`switch ${state.settings.theme === 'light' ? 'on' : ''}`}
+            onClick={toggleTheme}
+            aria-label="Перемкнути тему"
+            aria-pressed={state.settings.theme === 'light'}
           />
         </div>
       </div>

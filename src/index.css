@@ -24,6 +24,28 @@
   --font-body: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
+:root[data-theme="light"] {
+  --bg: #f4f6fb;
+  --bg-2: #ffffff;
+  --bg-3: #eef2f9;
+  --bg-4: #e2e8f4;
+  --border: #26314600;
+  --border-solid: #cbd5e1;
+  --border-gold: #c29b46;
+  --gold: #9a7324;
+  --gold-bright: #7c5a14;
+  --gold-dim: #b8903c;
+  --text: #1e293b;
+  --text-dim: #64748b;
+  --accent: #2563eb;
+  --accent-2: #7c3aed;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warn: #d97706;
+  --panel: linear-gradient(160deg, #ffffff 0%, #f8fafc 100%);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
 /* ===================== Reset ===================== */
 *,
 *::before,
@@ -93,7 +115,7 @@ input {
   top: 0;
   height: 100vh;
   padding: 22px 14px;
-  background: linear-gradient(180deg, #0d1118 0%, #090c12 100%);
+  background: var(--bg-2);
   border-right: 1px solid var(--border-solid);
   display: flex;
   flex-direction: column;

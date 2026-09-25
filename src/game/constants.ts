@@ -2,7 +2,7 @@ import type { DayKind, Intensity, QuestCategory, StatKey } from './types'
 
 export const STORAGE_KEY = 'fitquest-state-v2'
 
-export const STATE_VERSION = 7
+export const STATE_VERSION = 8
 
 export const STAT_LABELS: Record<StatKey, string> = {
   strength: 'Сила',
