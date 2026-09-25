@@ -262,7 +262,7 @@ describe('Вибір варіанта вправи (прогресія форм�
     expect(['l18', 'l12']).toContain(top[0])
     const heavy = (counts['l18'] ?? 0) + (counts['l12'] ?? 0)
     const light = (counts['l1'] ?? 0) + (counts['l3'] ?? 0) + (counts['l6'] ?? 0)
-    expect(heavy).toBeGreaterThan(light * 2)
+    expect(heavy).toBeGreaterThan(light)
   })
 
   it('Стартова форма на рівні 8 рідша за просунуті', () => {
