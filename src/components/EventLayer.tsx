@@ -8,6 +8,7 @@ export function EventLayer({ events }: { events: GameEvent[] }) {
   const levelUp = events.find((e) => e.type === 'levelup')
   const unlock = events.find((e) => e.type === 'unlock')
   const achievements = events.filter((e) => e.type === 'achievement')
+  const hasBossWeek = achievements.some((e) => e.achievementId === 'boss_week')
   const dayComplete = events.some((e) => e.type === 'dayComplete')
   const dayPartial = events.some((e) => e.type === 'dayPartial')
   const sickDay = events.some((e) => e.type === 'sickDay')
@@ -26,12 +27,18 @@ export function EventLayer({ events }: { events: GameEvent[] }) {
           <Confetti />
         </>
       )}
-      {dayComplete && <Confetti />}
+      {(dayComplete || hasBossWeek) && <Confetti />}
       <div className="toast-area" role="status" aria-live="polite">
         {achievements.length > 0 &&
           achievements.map((e, i) =>
             e.type === 'achievement' ? (
-              <AchievementToast key={e.achievementId} id={e.achievementId} index={i} />
+              e.achievementId === 'boss_week' ? (
+                <Toast key={e.achievementId} index={i}>
+                  <Trophy size={18} color="var(--gold)" /> Боса тижня переможено! «Переможець тижня» 👑
+                </Toast>
+              ) : (
+                <AchievementToast key={e.achievementId} id={e.achievementId} index={i} />
+              )
             ) : null,
           )}
         {dayComplete && (

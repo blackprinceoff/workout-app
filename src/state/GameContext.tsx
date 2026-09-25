@@ -443,8 +443,9 @@ export function useGame(): GameContextValue {
 function playSoundsForEvents(events: GameEvent[], enabled: boolean) {
   if (!enabled) return
   const hasLevelUp = events.some((e) => e.type === 'levelup')
+  const hasBossWeek = events.some((e) => e.type === 'achievement' && e.achievementId === 'boss_week')
   const hasAchievement = events.some((e) => e.type === 'achievement')
-  if (hasLevelUp) void playLevelUp()
+  if (hasLevelUp || hasBossWeek) void playLevelUp()
   else if (hasAchievement) void playAchievement()
   else if (events.some((e) => e.type === 'dayComplete')) void playAchievement()
   else if (events.some((e) => e.type === 'dayPartial')) void playQuest()
