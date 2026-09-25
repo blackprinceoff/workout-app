@@ -398,4 +398,13 @@ describe('normalizeState — стійкість до керованого JSON (
     })!
     expect(s.weightHistory).toEqual([{ date: '2026-01-05', valueKg: 80.4 }])
   })
+
+  it('Rollover при відкаті дати назад (today < currentDate) оновлює currentDate без штрафів', () => {
+    const s = base({ currentDate: '2020-01-05', habit: 50, streak: 5 })
+    const next = rollover(s, '2020-01-03')
+    expect(next.currentDate).toBe('2020-01-03')
+    expect(next.habit).toBe(50)
+    expect(next.streak).toBe(5)
+    expect(next.questsByDate['2020-01-03']).toBeDefined()
+  })
 })

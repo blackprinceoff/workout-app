@@ -280,6 +280,24 @@ export function isSickDayMarked(state: GameState): boolean {
 export function rollover(state: GameState, todayIso: string = dateKey()): GameState {
   const today = todayIso
   if (state.currentDate === today) return state
+  if (today < state.currentDate) {
+    const level = levelOf(state)
+    const lastStrengthIds = new Set(
+      (state.questsByDate[today] ?? [])
+        .filter((q) => q.category === 'strength' && q.main && q.done)
+        .map((q) => q.templateId),
+    )
+    return {
+      ...state,
+      currentDate: today,
+      questsByDate: {
+        ...state.questsByDate,
+        [today]:
+          state.questsByDate[today] ??
+          generateDailyQuests(today, level, state.dayIntensity, false, new Set(), lastStrengthIds),
+      },
+    }
+  }
 
   let next: GameState = state
   let cursor = state.currentDate
