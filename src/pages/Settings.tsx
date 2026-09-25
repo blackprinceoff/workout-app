@@ -19,6 +19,7 @@ export function Settings() {
     setName,
     updateProfile,
     addWeight,
+    removeWeight,
     toggleSound,
     toggleNotifications,
     toggleTheme,
@@ -199,24 +200,41 @@ export function Settings() {
                 return (
                   <div
                     key={w.date}
-                    style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 14 }}
                   >
                     <span style={{ color: 'var(--text-dim)' }}>{formatUa(w.date)}</span>
-                    <span>
-                      <strong>{w.valueKg}</strong> кг
-                      {delta !== null && delta !== 0 && (
-                        <span
-                          style={{
-                            marginLeft: 8,
-                            color: delta < 0 ? 'var(--good)' : 'var(--danger)',
-                            fontSize: 12,
-                          }}
-                        >
-                          {delta > 0 ? '+' : ''}
-                          {delta.toFixed(1)}
-                        </span>
-                      )}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span>
+                        <strong>{w.valueKg}</strong> кг
+                        {delta !== null && delta !== 0 && (
+                          <span
+                            style={{
+                              marginLeft: 8,
+                              color: delta < 0 ? 'var(--good)' : 'var(--danger)',
+                              fontSize: 12,
+                            }}
+                          >
+                            {delta > 0 ? '+' : ''}
+                            {delta.toFixed(1)}
+                          </span>
+                        )}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeWeight(w.date)}
+                        title="Видалити запис"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--text-dim)',
+                          cursor: 'pointer',
+                          fontSize: 14,
+                          padding: '0 4px',
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
                   </div>
                 )
               })}

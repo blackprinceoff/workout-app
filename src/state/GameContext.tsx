@@ -44,6 +44,7 @@ type Action =
   | { type: 'SET_NAME'; name: string }
   | { type: 'UPDATE_PROFILE'; age: number; heightCm: number; weightKg: number }
   | { type: 'ADD_WEIGHT'; valueKg: number }
+  | { type: 'REMOVE_WEIGHT'; date: string }
   | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'TOGGLE_SOUND' }
   | { type: 'TOGGLE_NOTIFICATIONS' }
@@ -273,6 +274,11 @@ export function reducer(state: GameState, action: Action): GameState {
       )
       return { ...state, weightHistory: next.slice(-520) }
     }
+    case 'REMOVE_WEIGHT':
+      return {
+        ...state,
+        weightHistory: state.weightHistory.filter((w) => w.date !== action.date),
+      }
     case 'TOGGLE_SOUND':
       return { ...state, settings: { ...state.settings, sound: !state.settings.sound } }
     case 'TOGGLE_NOTIFICATIONS':
@@ -323,6 +329,7 @@ interface GameContextValue {
   setName: (name: string) => void
   updateProfile: (age: number, heightCm: number, weightKg: number) => void
   addWeight: (valueKg: number) => void
+  removeWeight: (date: string) => void
   completeOnboarding: () => void
   toggleSound: () => void
   toggleNotifications: () => void
@@ -387,6 +394,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       updateProfile: (age, heightCm, weightKg) =>
         dispatch({ type: 'UPDATE_PROFILE', age, heightCm, weightKg }),
       addWeight: (valueKg) => dispatch({ type: 'ADD_WEIGHT', valueKg }),
+      removeWeight: (date) => dispatch({ type: 'REMOVE_WEIGHT', date }),
       completeOnboarding: () => dispatch({ type: 'COMPLETE_ONBOARDING' }),
       toggleSound: () => dispatch({ type: 'TOGGLE_SOUND' }),
       toggleNotifications: async () => {
