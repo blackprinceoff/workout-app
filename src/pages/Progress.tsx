@@ -81,6 +81,22 @@ export function Progress() {
     return Math.round((sum / state.weightHistory.length) * 10) / 10
   }, [state.weightHistory])
 
+  const personalRecords = useMemo(() => {
+    let maxQ = 0
+    let maxXp = 0
+    let activeDays = 0
+    for (const qs of Object.values(state.questsByDate)) {
+      const done = qs.filter((q) => q.done)
+      if (done.length > 0) {
+        activeDays++
+        if (done.length > maxQ) maxQ = done.length
+        const dayXp = done.reduce((sum, q) => sum + q.xp, 0)
+        if (dayXp > maxXp) maxXp = dayXp
+      }
+    }
+    return { maxQuests: maxQ, maxXp: Math.floor(maxXp), activeDays }
+  }, [state.questsByDate])
+
   const heightM = state.profile.heightCm > 0 ? state.profile.heightCm / 100 : 0
   const bmi = heightM > 0 ? Math.round((latestWeight / (heightM * heightM)) * 10) / 10 : 0
   const bmiCategory =
@@ -277,6 +293,33 @@ export function Progress() {
               </div>
             )
           })}
+        </div>
+      </div>
+
+      <div className="panel section-mb">
+        <div className="panel-title">
+          <Trophy size={16} /> Особисті рекорди
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+          Твої найкращі досягнення за весь час тренувань у FitQuest.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+          <div style={{ background: 'var(--panel-sub)', padding: '10px 12px', borderRadius: 6 }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Макс. квестів за день</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--gold-bright)' }}>{personalRecords.maxQuests}</div>
+          </div>
+          <div style={{ background: 'var(--panel-sub)', padding: '10px 12px', borderRadius: 6 }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Макс. XP за день</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--gold-bright)' }}>{personalRecords.maxXp}</div>
+          </div>
+          <div style={{ background: 'var(--panel-sub)', padding: '10px 12px', borderRadius: 6 }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Активних днів</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--gold-bright)' }}>{personalRecords.activeDays}</div>
+          </div>
+          <div style={{ background: 'var(--panel-sub)', padding: '10px 12px', borderRadius: 6 }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Рекорд серії</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--gold-bright)' }}>{state.bestStreak} дн.</div>
+          </div>
         </div>
       </div>
 
