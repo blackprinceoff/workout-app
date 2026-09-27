@@ -72,6 +72,8 @@ export const ACHIEVEMENT_ICONS: Record<string, LucideIcon> = {
   balanced: Scale,
   nights_watch: Armchair,
   boss_week: Crown,
+  cardio_master: Activity,
+  strength_master: Dumbbell,
 }
 
 export type { LucideIcon }

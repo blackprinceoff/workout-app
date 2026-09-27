@@ -135,6 +135,18 @@ export const ACHIEVEMENTS: AchievementDef[] = [
         return !!qs && qs.length > 0 && qs.every((q) => q.done)
       }),
   },
+  {
+    id: 'cardio_master',
+    title: 'Майстер кардіо',
+    description: 'Виконай 20 кардіо-квестів',
+    check: (s) => s.perCategoryDone.cardio >= 20,
+  },
+  {
+    id: 'strength_master',
+    title: 'Залізна сила',
+    description: 'Виконай 50 силових квестів',
+    check: (s) => s.perCategoryDone.strength >= 50,
+  },
 ]
 
 export function checkAchievements(state: import('./types').GameState, level: number): string[] {
@@ -203,6 +215,10 @@ export function getAchievementProgress(id: string, state: import('./types').Game
       }).length
       return `${completedCount}/7 днів`
     }
+    case 'cardio_master':
+      return `${Math.min(20, state.perCategoryDone.cardio)}/20`
+    case 'strength_master':
+      return `${Math.min(50, state.perCategoryDone.strength)}/50`
     default:
       return null
   }
