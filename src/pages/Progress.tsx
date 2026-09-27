@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useGame } from '../state/GameContext'
-import { powerScore } from '../game/leveling'
-import { CATEGORY_LABELS } from '../game/constants'
+import { levelInfo, powerScore } from '../game/leveling'
+import { CATEGORY_LABELS, CLASS_BY_LEVEL } from '../game/constants'
 import {
   BarChart3,
   CalendarDays,
@@ -19,6 +19,7 @@ import { formatUa, lastNDays, weekdayShort } from '../game/dates'
 
 export function Progress() {
   const { state } = useGame()
+  const level = levelInfo(state.totalXp)
 
   const days14 = useMemo(() => lastNDays(14, state.currentDate), [state.currentDate])
   const days7 = useMemo(() => lastNDays(7, state.currentDate), [state.currentDate])
@@ -327,6 +328,57 @@ export function Progress() {
             <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Рекорд серії</div>
             <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--gold-bright)' }}>{state.bestStreak} дн.</div>
           </div>
+        </div>
+      </div>
+
+      <div className="panel section-mb">
+        <div className="panel-title">
+          <Crown size={16} /> Кар'єра героя (Класи)
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+          Етапи еволюції твого класу у FitQuest залежно від рівня.
+        </p>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {CLASS_BY_LEVEL.map((c) => {
+            const isUnlocked = level.level >= c.minLevel
+            const nextClassRow = CLASS_BY_LEVEL.find((x) => x.minLevel > c.minLevel)
+            const isCurrent = level.level >= c.minLevel && (!nextClassRow || level.level < nextClassRow.minLevel)
+            return (
+              <div
+                key={c.minLevel}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '8px 12px',
+                  background: isCurrent ? 'var(--gold-dim-bg, rgba(236,200,120,0.15))' : 'var(--panel-sub)',
+                  border: isCurrent ? '1px solid var(--gold)' : '1px solid var(--border-solid)',
+                  borderRadius: 6,
+                  fontSize: 13,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontFamily: 'var(--font-display)', color: isUnlocked ? 'var(--gold-bright)' : 'var(--text-dim)', width: 40 }}>
+                    {c.minLevel} р.
+                  </span>
+                  <span style={{ fontWeight: isCurrent ? 700 : 400, color: isUnlocked ? 'var(--text)' : 'var(--text-dim)' }}>
+                    {c.name}
+                  </span>
+                </div>
+                <div>
+                  {isCurrent ? (
+                    <span style={{ fontSize: 11, background: 'var(--gold)', color: 'var(--background)', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
+                      Поточний клас
+                    </span>
+                  ) : isUnlocked ? (
+                    <span style={{ fontSize: 11, color: 'var(--good)' }}>✓ Відкрито</span>
+                  ) : (
+                    <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>{c.minLevel - level.level} рівнів до розблокування</span>
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 
