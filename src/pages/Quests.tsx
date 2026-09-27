@@ -47,6 +47,11 @@ export function Quests() {
   const [customCat, setCustomCat] = useState<QuestCategory>('strength')
   const [customXp, setCustomXp] = useState(15)
   const [customStat, setCustomStat] = useState<StatKey | ''>('strength')
+  const [filterCategory, setFilterCategory] = useState<QuestCategory | 'all'>('all')
+
+  const filteredQuests = filterCategory === 'all'
+    ? todayQuests
+    : todayQuests.filter((q) => q.category === filterCategory)
 
   const handleAddCustom = (e: React.FormEvent) => {
     e.preventDefault()
@@ -249,17 +254,47 @@ export function Quests() {
         </div>
       )}
 
+      <div className="chips" style={{ marginBottom: 12 }}>
+        <button
+          type="button"
+          className={`chip ${filterCategory === 'all' ? 'active' : ''}`}
+          onClick={() => setFilterCategory('all')}
+        >
+          Усі ({todayQuests.length})
+        </button>
+        {(['strength', 'core', 'cardio', 'mobility', 'break'] as QuestCategory[]).map((cat) => {
+          const count = todayQuests.filter((q) => q.category === cat).length
+          if (count === 0) return null
+          return (
+            <button
+              key={cat}
+              type="button"
+              className={`chip ${filterCategory === cat ? 'active' : ''}`}
+              onClick={() => setFilterCategory(cat)}
+            >
+              {CATEGORY_LABELS[cat]} ({count})
+            </button>
+          )
+        })}
+      </div>
+
       <div className="panel pquest-list" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {todayQuests.map((q) => (
-          <QuestRow
-            key={q.id}
-            quest={q}
-            onToggle={q.done ? undoQuest : completeQuest}
-            onSwap={swapQuest}
-            canSwap={!q.done && swapsLeft > 0}
-            onDeleteCustom={deleteCustomQuest}
-          />
-        ))}
+        {filteredQuests.length === 0 ? (
+          <div style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '16px 0', fontSize: 13 }}>
+            Немає квестів у цій категорії.
+          </div>
+        ) : (
+          filteredQuests.map((q) => (
+            <QuestRow
+              key={q.id}
+              quest={q}
+              onToggle={q.done ? undoQuest : completeQuest}
+              onSwap={swapQuest}
+              canSwap={!q.done && swapsLeft > 0}
+              onDeleteCustom={deleteCustomQuest}
+            />
+          ))
+        )}
         <div className="settings-hint" style={{ marginTop: 2 }}>
           Замінено вправ сьогодні: {SWAPS_PER_DAY - swapsLeft}/{SWAPS_PER_DAY} — заміна дає
           альтернативу з тієї ж групи чи легшої сім'ї (XP перераховується під нову вправу).
