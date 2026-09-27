@@ -81,6 +81,27 @@ export function Progress() {
     return Math.round((sum / state.weightHistory.length) * 10) / 10
   }, [state.weightHistory])
 
+  const heightM = state.profile.heightCm > 0 ? state.profile.heightCm / 100 : 0
+  const bmi = heightM > 0 ? Math.round((latestWeight / (heightM * heightM)) * 10) / 10 : 0
+  const bmiCategory =
+    bmi === 0
+      ? ''
+      : bmi < 18.5
+      ? 'Недостатня вага'
+      : bmi < 25
+      ? 'Норма'
+      : bmi < 30
+      ? 'Надмірна вага'
+      : 'Ожиріння'
+  const bmiColor =
+    bmi === 0
+      ? 'var(--text-dim)'
+      : bmi >= 18.5 && bmi < 25
+      ? 'var(--good)'
+      : bmi < 30
+      ? 'var(--gold)'
+      : 'var(--danger)'
+
   const [noteSearch, setNoteSearch] = useState('')
 
   const allNotes = useMemo(() => {
@@ -290,6 +311,14 @@ export function Progress() {
               <strong>{avgWeight} кг</strong>
             </div>
           </div>
+          {state.profile.heightCm > 0 && bmi > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '6px 10px', background: 'var(--panel-sub)', borderRadius: 6, fontSize: 13 }}>
+              <span style={{ color: 'var(--text-dim)' }}>Індекс маси тіла (ІМТ):</span>
+              <span>
+                <strong>{bmi}</strong> <span style={{ color: bmiColor, marginLeft: 4 }}>({bmiCategory})</span>
+              </span>
+            </div>
+          )}
           <div style={{ display: 'grid', gap: 6 }}>
             {state.weightHistory.slice(-5).reverse().map((w, i) => {
               const prev = state.weightHistory[state.weightHistory.length - 1 - i - 1]
