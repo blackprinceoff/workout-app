@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useGame } from '../state/GameContext'
 import { CLASS_BY_LEVEL, CATEGORY_LABELS, HABIT_DAY_GAIN, STAT_LABELS } from '../game/constants'
-import { lastNDays, shiftDateKey } from '../game/dates'
+import { lastNDays, shiftDateKey, weekdayShort } from '../game/dates'
 import { xpMultiplier } from '../game/leveling'
 import { QUEST_TEMPLATES } from '../game/quests'
 import { getCompanionInfo } from '../game/companion'
@@ -9,6 +9,7 @@ import { ACHIEVEMENTS, getAchievementProgress } from '../game/achievements'
 import {
   BarChart3,
   CategoryGlyph,
+  Crown,
   Flame,
   ScrollText,
   Shield,
@@ -239,6 +240,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
 
       <WaterTracker />
       <DailyQuote />
+      <WeeklyBossWidget onNavigate={onNavigate} />
 
       <div className="panel section-mb" style={{ marginTop: 16 }}>
         <div className="panel-title">
@@ -523,6 +525,55 @@ function DailyQuote() {
       </div>
       <div style={{ fontSize: 13, color: 'var(--text-dim)', fontStyle: 'italic', lineHeight: 1.5 }}>
         «{quotes[index]}»
+      </div>
+    </div>
+  )
+}
+
+function WeeklyBossWidget({ onNavigate }: { onNavigate: (page: string) => void }) {
+  const { state } = useGame()
+  const days7 = lastNDays(7, state.currentDate)
+  const wonDays = days7.filter((d) => {
+    const qs = state.questsByDate[d] ?? []
+    return qs.length > 0 && qs.every((q) => q.done)
+  }).length
+
+  return (
+    <div className="panel section-mb" style={{ marginTop: 16, padding: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
+          <Crown size={16} color="var(--gold)" />
+          <span>Бос тижня (7 днів)</span>
+        </div>
+        <button
+          type="button"
+          className="btn btn-sm"
+          onClick={() => onNavigate('progress')}
+          style={{ padding: '2px 8px', fontSize: 12 }}
+        >
+          Деталі
+        </button>
+      </div>
+      <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 10 }}>
+        Сім днів без прогулів — перемога над босом. Золота клітинка — ідеальний день.
+      </p>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        {days7.map((d) => {
+          const qs = state.questsByDate[d] ?? []
+          const all = qs.length > 0 && qs.every((q) => q.done)
+          const partial = qs.some((q) => q.done)
+          const level = all ? 'l4' : partial ? 'l2' : 'l0'
+          return (
+            <div
+              key={d}
+              className={`heat-cell ${level} ${d === state.currentDate ? 'today' : ''}`}
+              title={`${weekdayShort(d)} ${d} · ${qs.filter((q) => q.done).length}/${qs.length} квестів`}
+            />
+          )
+        })}
+        <span style={{ fontSize: 13, fontWeight: 600, color: wonDays === 7 ? 'var(--gold-bright)' : 'var(--text-dim)', marginLeft: 4 }}>
+          {wonDays === 7 ? '🏆 Перемога!' : `${wonDays}/7 днів`}
+        </span>
       </div>
     </div>
   )
