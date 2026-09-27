@@ -132,6 +132,12 @@ export function Progress() {
     return allNotes.filter(([date, text]) => date.includes(q) || text.toLowerCase().includes(q))
   }, [allNotes, noteSearch])
 
+  const waterEntries = useMemo(() => {
+    return Object.entries(state.waterByDate || {}).sort(([a], [b]) => b.localeCompare(a))
+  }, [state.waterByDate])
+  const totalWaterGlasses = waterEntries.reduce((acc, [, val]) => acc + val, 0)
+  const avgWaterGlasses = waterEntries.length > 0 ? Math.round((totalWaterGlasses / waterEntries.length) * 10) / 10 : 0
+
   return (
     <>
       <h1 className="page-title">
@@ -380,6 +386,42 @@ export function Progress() {
                 </div>
               )
             })}
+          </div>
+        </div>
+      )}
+
+      {waterEntries.length > 0 && (
+        <div className="panel section-mb">
+          <div className="panel-title">
+            💧 Статистика гідратації
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+            Споживання води за весь час тренувань (ціль — 8 склянок / 2 л на день).
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 12 }}>
+            <div style={{ background: 'var(--panel-sub)', padding: '10px 12px', borderRadius: 6 }}>
+              <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Всього випито</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--gold-bright)' }}>
+                {totalWaterGlasses} скл. <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-dim)' }}>({Math.round(totalWaterGlasses * 0.25 * 10) / 10} л)</span>
+              </div>
+            </div>
+            <div style={{ background: 'var(--panel-sub)', padding: '10px 12px', borderRadius: 6 }}>
+              <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Середнє на день</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--gold-bright)' }}>
+                {avgWaterGlasses} скл. <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-dim)' }}>({Math.round(avgWaterGlasses * 0.25 * 10) / 10} л)</span>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gap: 6, maxHeight: 200, overflowY: 'auto' }}>
+            {waterEntries.slice(0, 5).map(([date, count]) => (
+              <div key={date} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-dim)' }}>
+                <span>{formatUa(date)}</span>
+                <span>
+                  <strong style={{ color: count >= 8 ? 'var(--gold-bright)' : 'var(--text)' }}>{count}</strong> / 8 склянок
+                  {count >= 8 && <span style={{ marginLeft: 6, color: 'var(--good)', fontSize: 11 }}>✓ ціль</span>}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}
