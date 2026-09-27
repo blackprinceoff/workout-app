@@ -66,6 +66,7 @@ export function createInitialState(): GameState {
     swapsUsed: 0,
     soreGroups: [],
     notesByDate: {},
+    waterByDate: { [today]: 0 },
     onboardingDone: false,
     events: [],
   }
@@ -128,6 +129,9 @@ function migrateRaw(raw: unknown): unknown {
   }
   if (version < 9) {
     next.notesByDate = {}
+  }
+  if (version < 10) {
+    next.waterByDate = {}
   }
   return next
 }
@@ -203,6 +207,14 @@ export function normalizeState(raw: unknown): GameState | null {
         ? Object.fromEntries(
             Object.entries(r.notesByDate).filter(
               ([k, v]) => isDateKey(k) && typeof v === 'string',
+            ),
+          )
+        : {},
+    waterByDate:
+      typeof r.waterByDate === 'object' && r.waterByDate !== null
+        ? Object.fromEntries(
+            Object.entries(r.waterByDate).filter(
+              ([k, v]) => isDateKey(k) && typeof v === 'number' && Number.isFinite(v) && v >= 0,
             ),
           )
         : {},

@@ -112,6 +112,7 @@ export interface GameState {
   swapsUsed: number
   soreGroups: MuscleGroup[]
   notesByDate: Record<string, string>
+  waterByDate: Record<string, number>
   onboardingDone: boolean
   events: GameEvent[]
 }

@@ -236,6 +236,8 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
         </div>
       </div>
 
+      <WaterTracker />
+
       <div className="panel section-mb" style={{ marginTop: 16 }}>
         <div className="panel-title">
           <Shield size={16} /> Попереду на шляху
@@ -412,7 +414,79 @@ function Kpi({
       <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-dim)' }}>
         {label}
       </div>
-      {note && <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 2 }}>{note}</div>}
+       {note && <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 2 }}>{note}</div>}
+    </div>
+  )
+}
+
+function WaterTracker() {
+  const { state, setWater } = useGame()
+  const waterCount = state.waterByDate[state.currentDate] ?? 0
+  const target = 8
+
+  return (
+    <div className="panel section-mb" style={{ marginTop: 16, padding: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
+          <span>💧 Трекер води (Гідратація)</span>
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--gold-bright)', fontWeight: 600 }}>
+          {waterCount} / {target} склянок ({Math.round(waterCount * 0.25 * 10) / 10} л)
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+        {Array.from({ length: target }).map((_, i) => {
+          const filled = i < waterCount
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setWater(filled ? i : i + 1)}
+              title={`Склянка ${i + 1} (250 мл)`}
+              style={{
+                width: 32,
+                height: 40,
+                borderRadius: '4px 4px 10px 10px',
+                background: filled ? 'var(--gold)' : 'var(--surface-raised)',
+                border: '1px solid var(--border-solid)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 14,
+                color: filled ? 'var(--background)' : 'var(--text-dim)',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              🥛
+            </button>
+          )
+        })}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <div className="settings-hint">
+          Ціль — 8 склянок (2 л) на день для підтримки тонусу та відновлення.
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() => setWater(Math.max(0, waterCount - 1))}
+            disabled={waterCount <= 0}
+            style={{ padding: '2px 8px', fontSize: 12 }}
+          >
+            -
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-gold"
+            onClick={() => setWater(waterCount + 1)}
+            style={{ padding: '2px 8px', fontSize: 12 }}
+          >
+            + Склянка
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

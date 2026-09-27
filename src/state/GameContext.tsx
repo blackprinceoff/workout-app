@@ -54,8 +54,9 @@ type Action =
   | { type: 'IMPORT_STATE'; state: GameState }
   | { type: 'RESET' }
   | { type: 'ROLLOVER' }
-  | { type: 'ADD_CUSTOM_QUEST'; title: string; category: QuestCategory; xp: number; stat?: StatKey }
-  | { type: 'DELETE_CUSTOM_QUEST'; questId: string }
+   | { type: 'ADD_CUSTOM_QUEST'; title: string; category: QuestCategory; xp: number; stat?: StatKey }
+   | { type: 'DELETE_CUSTOM_QUEST'; questId: string }
+   | { type: 'SET_WATER'; count: number }
 
 function unlockAchievements(
   state: GameState,
@@ -268,6 +269,17 @@ export function reducer(state: GameState, action: Action): GameState {
           [action.date]: action.text,
         },
       }
+    case 'SET_WATER': {
+      const today = state.currentDate
+      const count = Math.max(0, Math.min(20, action.count))
+      return {
+        ...state,
+        waterByDate: {
+          ...state.waterByDate,
+          [today]: count,
+        },
+      }
+    }
     case 'CLEAR_EVENTS':
       return { ...state, events: [] }
     case 'SET_NAME':
@@ -392,6 +404,8 @@ interface GameContextValue {
   doExport: () => void
   addCustomQuest: (title: string, category: QuestCategory, xp: number, stat?: StatKey) => void
   deleteCustomQuest: (questId: string) => void
+  waterCount: number
+  setWater: (count: number) => void
 }
 
 const GameContext = createContext<GameContextValue | null>(null)
@@ -485,6 +499,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       addCustomQuest: (title, category, xp, stat) =>
         dispatch({ type: 'ADD_CUSTOM_QUEST', title, category, xp, stat }),
       deleteCustomQuest: (questId) => dispatch({ type: 'DELETE_CUSTOM_QUEST', questId }),
+      waterCount: state.waterByDate[state.currentDate] ?? 0,
+      setWater: (count) => dispatch({ type: 'SET_WATER', count }),
     }),
     [state, level, statsList, todayQuests],
   )
