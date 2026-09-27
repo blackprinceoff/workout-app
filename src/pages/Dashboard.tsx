@@ -4,6 +4,7 @@ import { lastNDays, shiftDateKey } from '../game/dates'
 import { xpMultiplier } from '../game/leveling'
 import { QUEST_TEMPLATES } from '../game/quests'
 import { getCompanionInfo } from '../game/companion'
+import { ACHIEVEMENTS, getAchievementProgress } from '../game/achievements'
 import {
   BarChart3,
   CategoryGlyph,
@@ -58,6 +59,8 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
     .sort((a, b) => (a.minLevel ?? 1) - (b.minLevel ?? 1))
     .slice(0, 3)
   const nextClass = CLASS_BY_LEVEL.find((r) => r.minLevel > level.level)
+  const nextAchievement = ACHIEVEMENTS.find((a) => !state.unlockedAchievements[a.id])
+  const nextAchievementProgress = nextAchievement ? getAchievementProgress(nextAchievement.id, state, level.level) : null
 
   const yesterdayKey = shiftDateKey(state.currentDate, -1)
   const yesterdayQuests = state.questsByDate[yesterdayKey]
@@ -254,6 +257,45 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
           ))}
         </div>
       </div>
+
+      {nextAchievement && (
+        <div className="panel section-mb" style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              background: 'var(--surface-raised)',
+              border: '1px solid var(--border-solid)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--gold)',
+              flexShrink: 0,
+              cursor: 'pointer',
+            }}
+            onClick={() => onNavigate('achievements')}
+            title="Перейти до трофеїв"
+          >
+            <Trophy size={20} />
+          </div>
+          <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => onNavigate('achievements')}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-dim)' }}>
+                Наступний трофей
+              </span>
+              {nextAchievementProgress && (
+                <span style={{ fontSize: 12, color: 'var(--gold)', fontWeight: 600 }}>
+                  {nextAchievementProgress}
+                </span>
+              )}
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)', marginTop: 2 }}>
+              {nextAchievement.title} — <span style={{ fontWeight: 400, color: 'var(--text-dim)' }}>{nextAchievement.description}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid-2">
         <div className="panel">
