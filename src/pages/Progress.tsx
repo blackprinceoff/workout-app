@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useGame } from '../state/GameContext'
 import { powerScore } from '../game/leveling'
+import { CATEGORY_LABELS } from '../game/constants'
 import {
   BarChart3,
   CalendarDays,
@@ -51,6 +52,13 @@ export function Progress() {
   const pushPct = (muscleCounts.push / totalMuscle) * 100
   const legPct = (muscleCounts.leg / totalMuscle) * 100
   const corePct = (muscleCounts.core / totalMuscle) * 100
+
+  const totalCats =
+    (state.perCategoryDone.strength || 0) +
+    (state.perCategoryDone.core || 0) +
+    (state.perCategoryDone.cardio || 0) +
+    (state.perCategoryDone.mobility || 0) +
+    (state.perCategoryDone.break || 0) || 1
 
   const latestWeight = state.weightHistory[state.weightHistory.length - 1]?.valueKg ?? state.profile.weightKg
   const weightDelta = state.weightHistory.length > 1
@@ -222,6 +230,32 @@ export function Progress() {
           <div style={{ width: `${pushPct}%`, background: 'var(--gold)' }} title={`Push: ${muscleCounts.push}`} />
           <div style={{ width: `${legPct}%`, background: 'var(--gold-dim)' }} title={`Leg: ${muscleCounts.leg}`} />
           <div style={{ width: `${corePct}%`, background: 'var(--success)' }} title={`Core: ${muscleCounts.core}`} />
+        </div>
+      </div>
+
+      <div className="panel section-mb">
+        <div className="panel-title">
+          <Trophy size={16} /> Квести за категоріями
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+          Загальна кількість виконаних квестів за типами активності.
+        </p>
+        <div style={{ display: 'grid', gap: 8, marginBottom: 4 }}>
+          {(['strength', 'core', 'cardio', 'mobility', 'break'] as const).map((cat) => {
+            const count = state.perCategoryDone[cat] || 0
+            const pct = Math.round((count / totalCats) * 100)
+            return (
+              <div key={cat} style={{ fontSize: 13 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span>{CATEGORY_LABELS[cat]}</span>
+                  <span style={{ color: 'var(--text-dim)' }}>{count} ({pct}%)</span>
+                </div>
+                <div className="bar" style={{ height: 6, borderRadius: 3, background: 'var(--surface-raised)', overflow: 'hidden' }}>
+                  <div style={{ width: `${pct}%`, height: '100%', background: 'var(--gold)', borderRadius: 3 }} />
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 
