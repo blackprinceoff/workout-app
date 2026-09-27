@@ -13,6 +13,7 @@ import {
   Swords,
   TrendingUp,
   Trophy,
+  Zap,
 } from '../components/Glyphs'
 import { formatUa, lastNDays, weekdayShort } from '../game/dates'
 
@@ -481,6 +482,9 @@ export function Progress() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Trophy size={15} color="var(--gold-dim)" /> Загальний XP: <strong>{Math.floor(state.totalXp)}</strong>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Zap size={15} color="var(--gold-dim)" /> Спалено енергії: <strong>{Math.round(state.totalXp * 0.75)} ккал</strong>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Flame size={15} color="var(--gold-dim)" /> Поточна серія: <strong>{state.streak}</strong>
