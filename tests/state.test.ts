@@ -139,3 +139,26 @@ describe('reducer — COMPLETE_ONBOARDING', () => {
     expect(next.totalXp).toBe(0)
   })
 })
+
+describe('reducer — CUSTOM_QUESTS', () => {
+  it('Додає власний квест на день та дозволяє видалити його, якщо не виконано', () => {
+    const s = stateFor({ questsByDate: { [MONDAY]: generateDailyQuests(MONDAY, 1, 'normal') } })
+    const countBefore = s.questsByDate[MONDAY].length
+    const next = reducer(s, {
+      type: 'ADD_CUSTOM_QUEST',
+      title: 'Власна вправа',
+      category: 'strength',
+      xp: 20,
+      stat: 'strength',
+    })
+    const questsToday = next.questsByDate[MONDAY]
+    expect(questsToday.length).toBe(countBefore + 1)
+    const custom = questsToday.find((q) => q.templateId === 'custom')
+    expect(custom).toBeDefined()
+    expect(custom?.title).toBe('Власна вправа')
+    expect(custom?.xp).toBe(20)
+
+    const deleted = reducer(next, { type: 'DELETE_CUSTOM_QUEST', questId: custom!.id })
+    expect(deleted.questsByDate[MONDAY].length).toBe(countBefore)
+  })
+})

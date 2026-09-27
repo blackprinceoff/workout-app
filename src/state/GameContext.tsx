@@ -29,6 +29,7 @@ import type {
   GameState,
   Intensity,
   MuscleGroup,
+  QuestCategory,
   StatKey,
 } from '../game/types'
 import { playAchievement, playLevelUp, playQuest } from '../utils/sound'
@@ -53,6 +54,8 @@ type Action =
   | { type: 'IMPORT_STATE'; state: GameState }
   | { type: 'RESET' }
   | { type: 'ROLLOVER' }
+  | { type: 'ADD_CUSTOM_QUEST'; title: string; category: QuestCategory; xp: number; stat?: StatKey }
+  | { type: 'DELETE_CUSTOM_QUEST'; questId: string }
 
 function unlockAchievements(
   state: GameState,
@@ -310,6 +313,46 @@ export function reducer(state: GameState, action: Action): GameState {
     }
     case 'ROLLOVER':
       return rollover(state)
+    case 'ADD_CUSTOM_QUEST': {
+      const today = state.currentDate
+      const todayQuests = state.questsByDate[today] ?? []
+      const title = action.title.trim()
+      if (!title) return state
+      const newQuest: DailyQuest = {
+        id: `custom_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        templateId: 'custom',
+        variantId: 'custom',
+        title,
+        description: 'Власний квест дня',
+        category: action.category,
+        difficulty: 2,
+        stat: action.stat,
+        xp: Math.max(5, Math.min(100, action.xp || 15)),
+        main: false,
+        done: false,
+        completedAt: null,
+      }
+      return {
+        ...state,
+        questsByDate: {
+          ...state.questsByDate,
+          [today]: [...todayQuests, newQuest],
+        },
+      }
+    }
+    case 'DELETE_CUSTOM_QUEST': {
+      const today = state.currentDate
+      const todayQuests = state.questsByDate[today] ?? []
+      const target = todayQuests.find((q) => q.id === action.questId)
+      if (!target || target.templateId !== 'custom' || target.done) return state
+      return {
+        ...state,
+        questsByDate: {
+          ...state.questsByDate,
+          [today]: todayQuests.filter((q) => q.id !== action.questId),
+        },
+      }
+    }
     default:
       return state
   }
@@ -347,6 +390,8 @@ interface GameContextValue {
   importState: (json: string) => boolean
   resetGame: () => void
   doExport: () => void
+  addCustomQuest: (title: string, category: QuestCategory, xp: number, stat?: StatKey) => void
+  deleteCustomQuest: (questId: string) => void
 }
 
 const GameContext = createContext<GameContextValue | null>(null)
@@ -437,6 +482,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       },
       resetGame: () => dispatch({ type: 'RESET' }),
       doExport: () => exportState(state),
+      addCustomQuest: (title, category, xp, stat) =>
+        dispatch({ type: 'ADD_CUSTOM_QUEST', title, category, xp, stat }),
+      deleteCustomQuest: (questId) => dispatch({ type: 'DELETE_CUSTOM_QUEST', questId }),
     }),
     [state, level, statsList, todayQuests],
   )

@@ -11,7 +11,7 @@ import {
 import { formatUa, shiftDateKey } from '../game/dates'
 import { dayKindOf, effectiveLoad, warmFactor } from '../game/quests'
 import { classNameFor, levelInfo, xpMultiplierParts } from '../game/leveling'
-import type { DailyQuest, Intensity, MuscleGroup } from '../game/types'
+import type { DailyQuest, Intensity, MuscleGroup, QuestCategory, StatKey } from '../game/types'
 import { CategoryGlyph, Check, Flame, RefreshCw, ScrollText, Shield, Sparkles, StatGlyph, Target, Timer } from '../components/Glyphs'
 import { playTimerDone } from '../utils/sound'
 
@@ -38,7 +38,28 @@ export function Quests() {
     setNote,
     swapsLeft,
     level,
+    addCustomQuest,
+    deleteCustomQuest,
   } = useGame()
+
+  const [showAddCustom, setShowAddCustom] = useState(false)
+  const [customTitle, setCustomTitle] = useState('')
+  const [customCat, setCustomCat] = useState<QuestCategory>('strength')
+  const [customXp, setCustomXp] = useState(15)
+  const [customStat, setCustomStat] = useState<StatKey | ''>('strength')
+
+  const handleAddCustom = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!customTitle.trim()) return
+    addCustomQuest(
+      customTitle.trim(),
+      customCat,
+      Number(customXp) || 15,
+      customStat ? customStat : undefined,
+    )
+    setCustomTitle('')
+    setShowAddCustom(false)
+  }
 
   const allDone = todayQuests.length > 0 && todayQuests.every((q) => q.done)
   const kind = dayKindOf(state.currentDate)
@@ -236,12 +257,107 @@ export function Quests() {
             onToggle={q.done ? undoQuest : completeQuest}
             onSwap={swapQuest}
             canSwap={!q.done && swapsLeft > 0}
+            onDeleteCustom={deleteCustomQuest}
           />
         ))}
         <div className="settings-hint" style={{ marginTop: 2 }}>
           Замінено вправ сьогодні: {SWAPS_PER_DAY - swapsLeft}/{SWAPS_PER_DAY} — заміна дає
           альтернативу з тієї ж групи чи легшої сім'ї (XP перераховується під нову вправу).
         </div>
+      </div>
+
+      <div className="panel section-mt" style={{ padding: 12, marginTop: 12 }}>
+        {!showAddCustom ? (
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() => setShowAddCustom(true)}
+            style={{ width: '100%', justifyContent: 'center' }}
+          >
+            + Додати власний квест на сьогодні
+          </button>
+        ) : (
+          <form onSubmit={handleAddCustom} style={{ display: 'grid', gap: 10 }}>
+            <div className="settings-label" style={{ fontSize: 13 }}>Новий власний квест</div>
+            <div className="field">
+              <input
+                type="text"
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                placeholder="Наприклад: 30 віджимань / Розтяжка"
+                maxLength={40}
+                required
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div className="field" style={{ flex: 1, minWidth: 120 }}>
+                <label>Категорія</label>
+                <select
+                  value={customCat}
+                  onChange={(e) => setCustomCat(e.target.value as QuestCategory)}
+                  style={{
+                    width: '100%',
+                    background: 'var(--panel-sub)',
+                    color: 'var(--text)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 6,
+                    padding: '6px 8px',
+                    fontSize: 13,
+                  }}
+                >
+                  <option value="strength">Сила</option>
+                  <option value="core">Кор / Спина</option>
+                  <option value="cardio">Кардіо</option>
+                  <option value="mobility">Мобільність</option>
+                  <option value="break">Перерва</option>
+                </select>
+              </div>
+              <div className="field" style={{ width: 90 }}>
+                <label>XP</label>
+                <input
+                  type="number"
+                  min={5}
+                  max={50}
+                  value={customXp}
+                  onChange={(e) => setCustomXp(Number(e.target.value) || 15)}
+                />
+              </div>
+              <div className="field" style={{ flex: 1, minWidth: 100 }}>
+                <label>Атрибут</label>
+                <select
+                  value={customStat}
+                  onChange={(e) => setCustomStat(e.target.value as StatKey | '')}
+                  style={{
+                    width: '100%',
+                    background: 'var(--panel-sub)',
+                    color: 'var(--text)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 6,
+                    padding: '6px 8px',
+                    fontSize: 13,
+                  }}
+                >
+                  <option value="strength">Сила (Strength)</option>
+                  <option value="endurance">Витривалість (Endurance)</option>
+                  <option value="agility">Спритність (Agility)</option>
+                  <option value="">Без атрибута</option>
+                </select>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={() => setShowAddCustom(false)}
+              >
+                Скасувати
+              </button>
+              <button type="submit" className="btn btn-gold btn-sm">
+                Додати
+              </button>
+            </div>
+          </form>
+        )}
       </div>
 
       <BreakTimer />
@@ -288,11 +404,13 @@ function QuestRow({
   onToggle,
   onSwap,
   canSwap,
+  onDeleteCustom,
 }: {
   quest: DailyQuest
   onToggle: (id: string) => void
   onSwap: (id: string) => void
   canSwap: boolean
+  onDeleteCustom?: (id: string) => void
 }) {
   return (
     <div className={`quest-card ${quest.done ? 'done' : ''}`}>
@@ -311,6 +429,7 @@ function QuestRow({
             <CategoryGlyph category={quest.category} /> {CATEGORY_LABELS[quest.category]}
           </span>
           {quest.main && <span className="quest-cat" style={{ color: 'var(--gold-dim)' }}>основний</span>}
+          {quest.templateId === 'custom' && <span className="quest-cat" style={{ color: 'var(--gold)' }}>власний</span>}
         </div>
         <div className="quest-desc">{quest.description}</div>
       </div>
@@ -332,6 +451,18 @@ function QuestRow({
             aria-label="Замінити вправу"
           >
             <RefreshCw size={14} />
+          </button>
+        )}
+        {quest.templateId === 'custom' && !quest.done && onDeleteCustom && (
+          <button
+            type="button"
+            className="quest-swap"
+            onClick={() => onDeleteCustom(quest.id)}
+            title="Видалити власний квест"
+            aria-label="Видалити власний квест"
+            style={{ color: 'var(--danger)', fontWeight: 'bold' }}
+          >
+            ×
           </button>
         )}
       </div>
