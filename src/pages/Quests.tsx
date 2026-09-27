@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useGame } from '../state/GameContext'
 import {
   CATEGORY_LABELS,
@@ -48,10 +48,22 @@ export function Quests() {
   const [customXp, setCustomXp] = useState(15)
   const [customStat, setCustomStat] = useState<StatKey | ''>('strength')
   const [filterCategory, setFilterCategory] = useState<QuestCategory | 'all'>('all')
+  const [questSearch, setQuestSearch] = useState('')
 
-  const filteredQuests = filterCategory === 'all'
-    ? todayQuests
-    : todayQuests.filter((q) => q.category === filterCategory)
+  const filteredQuests = useMemo(() => {
+    let list: DailyQuest[] = filterCategory === 'all'
+      ? todayQuests
+      : todayQuests.filter((q) => q.category === filterCategory)
+    if (questSearch.trim()) {
+      const qLower = questSearch.toLowerCase()
+      list = list.filter(
+        (q) =>
+          q.title.toLowerCase().includes(qLower) ||
+          q.description.toLowerCase().includes(qLower),
+      )
+    }
+    return list
+  }, [todayQuests, filterCategory, questSearch])
 
   const handleAddCustom = (e: React.FormEvent) => {
     e.preventDefault()
@@ -253,6 +265,24 @@ export function Quests() {
           </span>
         </div>
       )}
+
+      <div style={{ marginBottom: 12 }}>
+        <input
+          type="text"
+          value={questSearch}
+          onChange={(e) => setQuestSearch(e.target.value)}
+          placeholder="Пошук квестів за назвою чи описом..."
+          style={{
+            width: '100%',
+            background: 'var(--panel)',
+            color: 'var(--text)',
+            border: '1px solid var(--border)',
+            borderRadius: 6,
+            padding: '8px 12px',
+            fontSize: 14,
+          }}
+        />
+      </div>
 
       <div className="chips" style={{ marginBottom: 12 }}>
         <button
