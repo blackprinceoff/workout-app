@@ -57,6 +57,22 @@ export function Progress() {
     ? latestWeight - state.weightHistory[0].valueKg
     : 0
 
+  const minWeight = useMemo(() => {
+    if (!state.weightHistory.length) return 0
+    return Math.min(...state.weightHistory.map((w) => w.valueKg))
+  }, [state.weightHistory])
+
+  const maxWeight = useMemo(() => {
+    if (!state.weightHistory.length) return 0
+    return Math.max(...state.weightHistory.map((w) => w.valueKg))
+  }, [state.weightHistory])
+
+  const avgWeight = useMemo(() => {
+    if (!state.weightHistory.length) return 0
+    const sum = state.weightHistory.reduce((acc, w) => acc + w.valueKg, 0)
+    return Math.round((sum / state.weightHistory.length) * 10) / 10
+  }, [state.weightHistory])
+
   const [noteSearch, setNoteSearch] = useState('')
 
   const allNotes = useMemo(() => {
@@ -225,6 +241,20 @@ export function Progress() {
                 {weightDelta > 0 ? '+' : ''}{weightDelta.toFixed(1)} кг
               </span>
             )}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12, padding: '8px 10px', background: 'var(--panel-sub)', borderRadius: 6, fontSize: 13, textAlign: 'center' }}>
+            <div>
+              <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Мінімум</div>
+              <strong>{minWeight} кг</strong>
+            </div>
+            <div>
+              <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Максимум</div>
+              <strong>{maxWeight} кг</strong>
+            </div>
+            <div>
+              <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Середня</div>
+              <strong>{avgWeight} кг</strong>
+            </div>
           </div>
           <div style={{ display: 'grid', gap: 6 }}>
             {state.weightHistory.slice(-5).reverse().map((w, i) => {
