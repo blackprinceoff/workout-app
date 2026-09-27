@@ -361,6 +361,7 @@ export function Quests() {
       </div>
 
       <BreakTimer />
+      <ExerciseHoldTimer />
 
       <div className="panel section-mt" style={{ padding: 12, marginTop: 16 }}>
         <div
@@ -606,6 +607,116 @@ function BreakTimer() {
       {done && (
         <div className="settings-hint" style={{ marginTop: 8, color: 'var(--good)' }}>
           Перерву завершено — час рухатись!
+        </div>
+      )}
+    </div>
+  )
+}
+
+const HOLD_PRESETS = [30, 45, 60, 90]
+
+function ExerciseHoldTimer() {
+  const { state } = useGame()
+  const [durationSec, setDurationSec] = useState(30)
+  const [seconds, setSeconds] = useState(30)
+  const [running, setRunning] = useState(false)
+  const [done, setDone] = useState(false)
+
+  useEffect(() => {
+    if (!running) return
+
+    const id = setInterval(() => {
+      setSeconds((s) => {
+        if (s <= 1) {
+          setRunning(false)
+          setDone(true)
+          if (state.settings.sound) playTimerDone()
+          return durationSec
+        }
+        return s - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(id)
+  }, [running, durationSec, state.settings.sound])
+
+  const mm = String(Math.floor(seconds / 60)).padStart(2, '0')
+  const ss = String(seconds % 60).padStart(2, '0')
+
+  return (
+    <div className="panel section-mb" style={{ marginTop: 16, padding: 12 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Timer size={20} color="var(--good)" />
+          <div>
+            <div className="settings-label">Таймер вправ ({durationSec}с)</div>
+            <div className="settings-hint">Для планки, розтяжки чи утримання</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          {!running && !done && (
+            <div style={{ display: 'flex', gap: 4 }}>
+              {HOLD_PRESETS.map((sec) => (
+                <button
+                  key={sec}
+                  type="button"
+                  className={`btn btn-sm ${durationSec === sec ? 'btn-gold' : ''}`}
+                  onClick={() => {
+                    setDurationSec(sec)
+                    setSeconds(sec)
+                  }}
+                  style={{ padding: '2px 8px', fontSize: 11 }}
+                >
+                  {sec}с
+                </button>
+              ))}
+            </div>
+          )}
+          <div
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 26,
+              color: done ? 'var(--good)' : 'var(--gold-bright)',
+              minWidth: 70,
+              textAlign: 'center',
+            }}
+          >
+            {mm}:{ss}
+          </div>
+          <button
+            type="button"
+            className="btn btn-gold btn-sm"
+            onClick={() => {
+              setDone(false)
+              setRunning((r) => !r)
+            }}
+          >
+            {running ? 'Пауза' : 'Старт'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() => {
+              setRunning(false)
+              setDone(false)
+              setSeconds(durationSec)
+            }}
+          >
+            Скинути
+          </button>
+        </div>
+      </div>
+      {done && (
+        <div className="settings-hint" style={{ marginTop: 8, color: 'var(--good)' }}>
+          Час вичерпано! Чудове утримання!
         </div>
       )}
     </div>
