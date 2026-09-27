@@ -48,12 +48,18 @@ export function Quests() {
   const [customXp, setCustomXp] = useState(15)
   const [customStat, setCustomStat] = useState<StatKey | ''>('strength')
   const [filterCategory, setFilterCategory] = useState<QuestCategory | 'all'>('all')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'done'>('all')
   const [questSearch, setQuestSearch] = useState('')
 
   const filteredQuests = useMemo(() => {
     let list: DailyQuest[] = filterCategory === 'all'
       ? todayQuests
       : todayQuests.filter((q) => q.category === filterCategory)
+    if (filterStatus === 'active') {
+      list = list.filter((q) => !q.done)
+    } else if (filterStatus === 'done') {
+      list = list.filter((q) => q.done)
+    }
     if (questSearch.trim()) {
       const qLower = questSearch.toLowerCase()
       list = list.filter(
@@ -63,7 +69,7 @@ export function Quests() {
       )
     }
     return list
-  }, [todayQuests, filterCategory, questSearch])
+  }, [todayQuests, filterCategory, filterStatus, questSearch])
 
   const handleAddCustom = (e: React.FormEvent) => {
     e.preventDefault()
@@ -282,6 +288,30 @@ export function Quests() {
             fontSize: 14,
           }}
         />
+      </div>
+
+      <div className="chips" style={{ marginBottom: 8, gap: 6 }}>
+        <button
+          type="button"
+          className={`chip ${filterStatus === 'all' ? 'active' : ''}`}
+          onClick={() => setFilterStatus('all')}
+        >
+          Усі статуси
+        </button>
+        <button
+          type="button"
+          className={`chip ${filterStatus === 'active' ? 'active' : ''}`}
+          onClick={() => setFilterStatus('active')}
+        >
+          Активні ({todayQuests.filter((q) => !q.done).length})
+        </button>
+        <button
+          type="button"
+          className={`chip ${filterStatus === 'done' ? 'active' : ''}`}
+          onClick={() => setFilterStatus('done')}
+        >
+          Виконані ({todayQuests.filter((q) => q.done).length})
+        </button>
       </div>
 
       <div className="chips" style={{ marginBottom: 12 }}>
