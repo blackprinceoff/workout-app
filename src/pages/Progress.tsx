@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useGame } from '../state/GameContext'
 import { powerScore } from '../game/leveling'
 import {
@@ -57,12 +57,19 @@ export function Progress() {
     ? latestWeight - state.weightHistory[0].valueKg
     : 0
 
-  const recentNotes = useMemo(() => {
+  const [noteSearch, setNoteSearch] = useState('')
+
+  const allNotes = useMemo(() => {
     return Object.entries(state.notesByDate || {})
       .filter(([, text]) => text.trim().length > 0)
       .sort(([a], [b]) => b.localeCompare(a))
-      .slice(0, 5)
   }, [state.notesByDate])
+
+  const filteredNotes = useMemo(() => {
+    if (!noteSearch.trim()) return allNotes
+    const q = noteSearch.toLowerCase()
+    return allNotes.filter(([date, text]) => date.includes(q) || text.toLowerCase().includes(q))
+  }, [allNotes, noteSearch])
 
   return (
     <>
@@ -241,22 +248,45 @@ export function Progress() {
         </div>
       )}
 
-      {recentNotes.length > 0 && (
+      {allNotes.length > 0 && (
         <div className="panel section-mb">
-          <div className="panel-title">
-            📝 Журнал нотаток дня
+          <div className="panel-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <span>📝 Журнал нотаток дня ({filteredNotes.length}/{allNotes.length})</span>
+            <input
+              type="text"
+              placeholder="Пошук у нотатках..."
+              value={noteSearch}
+              onChange={(e) => setNoteSearch(e.target.value)}
+              aria-label="Пошук у нотатках"
+              style={{
+                padding: '4px 10px',
+                borderRadius: 6,
+                border: '1px solid var(--border-solid)',
+                background: 'var(--surface-raised)',
+                color: 'var(--text)',
+                fontSize: 13,
+                outline: 'none',
+                width: 160,
+              }}
+            />
           </div>
           <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
-            Останні записи самопочуття та рефлексії тренувань.
+            Архів записів самопочуття та рефлексії тренувань.
           </p>
-          <div style={{ display: 'grid', gap: 10 }}>
-            {recentNotes.map(([date, text]) => (
-              <div key={date} style={{ background: 'var(--panel-sub)', padding: '10px 12px', borderRadius: 6, fontSize: 13 }}>
-                <div style={{ color: 'var(--gold)', fontWeight: 600, marginBottom: 4 }}>{formatUa(date)}</div>
-                <div style={{ color: 'var(--text)', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{text}</div>
-              </div>
-            ))}
-          </div>
+          {filteredNotes.length === 0 ? (
+            <div style={{ fontSize: 13, color: 'var(--text-dim)', fontStyle: 'italic', padding: '8px 0' }}>
+              Нічого не знайдено за запитом "{noteSearch}".
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: 10, maxHeight: 350, overflowY: 'auto' }}>
+              {filteredNotes.map(([date, text]) => (
+                <div key={date} style={{ background: 'var(--panel-sub)', padding: '10px 12px', borderRadius: 6, fontSize: 13 }}>
+                  <div style={{ color: 'var(--gold)', fontWeight: 600, marginBottom: 4 }}>{formatUa(date)}</div>
+                  <div style={{ color: 'var(--text)', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{text}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
