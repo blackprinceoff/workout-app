@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useGame } from '../state/GameContext'
 import { CLASS_BY_LEVEL, CATEGORY_LABELS, HABIT_DAY_GAIN, STAT_LABELS } from '../game/constants'
 import { lastNDays, shiftDateKey } from '../game/dates'
@@ -237,6 +238,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
       </div>
 
       <WaterTracker />
+      <DailyQuote />
 
       <div className="panel section-mb" style={{ marginTop: 16 }}>
         <div className="panel-title">
@@ -486,6 +488,41 @@ function WaterTracker() {
             + Склянка
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function DailyQuote() {
+  const quotes = [
+    "Шлях у тисячу лі починається з одного присідання.",
+    "Дисципліна — це перемога над сьогоднішнім собою.",
+    "Навіть найменший рух сьогодні сильніший за вчорашні сумніви.",
+    "Твоє тіло — твій храм і твій головний квест.",
+    "Повільно, але неухильно — так куються легенди.",
+    "Кожен виконаний квест наближає тебе до нового рівня.",
+    "Сила не береться з нізвідки — вона будується щодня.",
+  ]
+  const [index, setIndex] = useState(() => Math.floor(Math.random() * quotes.length))
+
+  return (
+    <div className="panel section-mb" style={{ marginTop: 16, padding: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
+          <Sparkles size={16} color="var(--gold)" />
+          <span>Цитата дня</span>
+        </div>
+        <button
+          type="button"
+          className="btn btn-sm"
+          onClick={() => setIndex((i) => (i + 1) % quotes.length)}
+          style={{ padding: '2px 8px', fontSize: 12 }}
+        >
+          Інша цитата
+        </button>
+      </div>
+      <div style={{ fontSize: 13, color: 'var(--text-dim)', fontStyle: 'italic', lineHeight: 1.5 }}>
+        «{quotes[index]}»
       </div>
     </div>
   )
