@@ -99,6 +99,26 @@ export function Progress() {
     return { maxQuests: maxQ, maxXp: Math.floor(maxXp), activeDays }
   }, [state.questsByDate])
 
+  const weekdayStats = useMemo(() => {
+    const counts = [0, 0, 0, 0, 0, 0, 0]
+    const totals = [0, 0, 0, 0, 0, 0, 0]
+    for (const [dateStr, quests] of Object.entries(state.questsByDate)) {
+      const [y, m, d] = dateStr.split('-').map(Number)
+      const date = new Date(y, m - 1, d)
+      let dayIndex = date.getDay() - 1
+      if (dayIndex === -1) dayIndex = 6
+      totals[dayIndex]++
+      const done = quests.filter((q) => q.done).length
+      counts[dayIndex] += done
+    }
+    const labels = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
+    const avgPerDay = counts.map((c, i) => (totals[i] > 0 ? Math.round((c / totals[i]) * 10) / 10 : 0))
+    const maxAvg = Math.max(1, ...avgPerDay)
+    const bestDayIndex = avgPerDay.indexOf(Math.max(...avgPerDay))
+    const bestDayName = ['Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П\'ятниця', 'Субота', 'Неділя'][bestDayIndex]
+    return { counts, totals, avgPerDay, maxAvg, bestDayName, labels }
+  }, [state.questsByDate])
+
   const heightM = state.profile.heightCm > 0 ? state.profile.heightCm / 100 : 0
   const bmi = heightM > 0 ? Math.round((latestWeight / (heightM * heightM)) * 10) / 10 : 0
   const bmiCategory =
@@ -328,6 +348,36 @@ export function Progress() {
             <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Рекорд серії</div>
             <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--gold-bright)' }}>{state.bestStreak} дн.</div>
           </div>
+        </div>
+      </div>
+
+      <div className="panel section-mb">
+        <div className="panel-title">
+          <CalendarDays size={16} /> Ефективність за днями тижня
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+          Середня кількість виконаних квестів за кожен день тижня. Найпродуктивніший день: <strong style={{ color: 'var(--gold)' }}>{weekdayStats.bestDayName}</strong>.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, alignItems: 'flex-end', height: 90, paddingBottom: 4 }}>
+          {weekdayStats.avgPerDay.map((val, i) => {
+            const h = (val / weekdayStats.maxAvg) * 100
+            const label = weekdayStats.labels[i]
+            return (
+              <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
+                <span style={{ fontSize: 10, color: 'var(--text-dim)', marginBottom: 2 }}>{val > 0 ? val : ''}</span>
+                <div
+                  style={{
+                    width: '100%',
+                    height: `${Math.max(4, h)}%`,
+                    background: val === Math.max(...weekdayStats.avgPerDay) && val > 0 ? 'var(--gold)' : 'var(--surface-raised)',
+                    borderRadius: 4,
+                  }}
+                  title={`${label}: сер. ${val} квестів`}
+                />
+                <span style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 4 }}>{label}</span>
+              </div>
+            )
+          })}
         </div>
       </div>
 

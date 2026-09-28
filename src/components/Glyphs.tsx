@@ -31,6 +31,7 @@ export {
   Save,
   Scale,
   ScrollText,
+  Search,
   Settings,
   Shield,
   Sparkles,
@@ -45,6 +46,7 @@ export {
   User,
   Volume2,
   Zap,
+  Lock,
 } from 'lucide-react'
 
 export function Glyph({
