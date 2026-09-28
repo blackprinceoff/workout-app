@@ -9,10 +9,10 @@ import {
   SWAPS_PER_DAY,
 } from '../game/constants'
 import { formatUa, shiftDateKey } from '../game/dates'
-import { dayKindOf, effectiveLoad, warmFactor } from '../game/quests'
+import { dayKindOf, effectiveLoad, QUEST_TEMPLATES, warmFactor } from '../game/quests'
 import { classNameFor, levelInfo, xpMultiplierParts } from '../game/leveling'
 import type { DailyQuest, Intensity, MuscleGroup, QuestCategory, StatKey } from '../game/types'
-import { CategoryGlyph, Check, Flame, RefreshCw, ScrollText, Shield, Sparkles, StatGlyph, Target, Timer } from '../components/Glyphs'
+import { CategoryGlyph, Check, Dumbbell, Flame, RefreshCw, ScrollText, Shield, Sparkles, StatGlyph, Target, Timer } from '../components/Glyphs'
 import { playTimerDone } from '../utils/sound'
 
 const INTENSITIES: Intensity[] = ['light', 'normal', 'intense']
@@ -50,6 +50,24 @@ export function Quests() {
   const [filterCategory, setFilterCategory] = useState<QuestCategory | 'all'>('all')
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'done'>('all')
   const [questSearch, setQuestSearch] = useState('')
+  const [showCatalog, setShowCatalog] = useState(false)
+  const [catalogCat, setCatalogCat] = useState<QuestCategory | 'all'>('all')
+  const [catalogSearch, setCatalogSearch] = useState('')
+
+  const filteredTemplates = useMemo(() => {
+    let list = catalogCat === 'all'
+      ? QUEST_TEMPLATES
+      : QUEST_TEMPLATES.filter((t) => t.category === catalogCat)
+    if (catalogSearch.trim()) {
+      const q = catalogSearch.toLowerCase()
+      list = list.filter(
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          t.variants.some((v) => v.title.toLowerCase().includes(q) || (v.note && v.note.toLowerCase().includes(q))),
+      )
+    }
+    return list
+  }, [catalogCat, catalogSearch])
 
   const filteredQuests = useMemo(() => {
     let list: DailyQuest[] = filterCategory === 'all'
@@ -363,14 +381,24 @@ export function Quests() {
 
       <div className="panel section-mt" style={{ padding: 12, marginTop: 12 }}>
         {!showAddCustom ? (
-          <button
-            type="button"
-            className="btn btn-sm"
-            onClick={() => setShowAddCustom(true)}
-            style={{ width: '100%', justifyContent: 'center' }}
-          >
-            + Додати власний квест на сьогодні
-          </button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() => setShowAddCustom(true)}
+              style={{ flex: 1, justifyContent: 'center', minWidth: 160 }}
+            >
+              + Додати власний квест на сьогодні
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() => setShowCatalog(true)}
+              style={{ flex: 1, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 6, minWidth: 160 }}
+            >
+              <Dumbbell size={16} /> Каталог та енциклопедія вправ ({QUEST_TEMPLATES.length})
+            </button>
+          </div>
         ) : (
           <form onSubmit={handleAddCustom} style={{ display: 'grid', gap: 10 }}>
             <div className="settings-label" style={{ fontSize: 13 }}>Новий власний квест</div>
@@ -491,6 +519,131 @@ export function Quests() {
         підхід на вправу. Болить м'яз — познач у чек-іні або заміни вправу. Можеш скасувати квест,
         натиснувши на виконаний.
       </p>
+
+      {showCatalog && (
+        <div className="overlay" onClick={() => setShowCatalog(false)}>
+          <div
+            className="modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: 640, width: '95%', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Енциклопедія вправ"
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--gold-bright)' }}>
+                <Dumbbell size={20} /> Енциклопедія вправ ({QUEST_TEMPLATES.length})
+              </div>
+              <button type="button" className="btn btn-sm" onClick={() => setShowCatalog(false)} aria-label="Закрити">
+                ✕
+              </button>
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+              Усі вправи та варіанти, які зустрічаються у FitQuest. З твоїм рівнем ({level.level}) розблоковані відповідні варіації.
+            </p>
+
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+              <input
+                type="text"
+                placeholder="Пошук вправи..."
+                value={catalogSearch}
+                onChange={(e) => setCatalogSearch(e.target.value)}
+                aria-label="Пошук вправи"
+                style={{
+                  flex: '1 1 180px',
+                  background: 'var(--surface-raised)',
+                  color: 'var(--text)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 6,
+                  padding: '6px 10px',
+                  fontSize: 13,
+                }}
+              />
+              <select
+                value={catalogCat}
+                onChange={(e) => setCatalogCat(e.target.value as QuestCategory | 'all')}
+                aria-label="Категорія вправ"
+                style={{
+                  background: 'var(--surface-raised)',
+                  color: 'var(--text)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 6,
+                  padding: '6px 10px',
+                  fontSize: 13,
+                }}
+              >
+                <option value="all">Усі категорії</option>
+                <option value="strength">Сила</option>
+                <option value="core">Кор / Спина</option>
+                <option value="cardio">Кардіо</option>
+                <option value="mobility">Мобільність</option>
+                <option value="break">Перерва</option>
+              </select>
+            </div>
+
+            <div style={{ overflowY: 'auto', flex: 1, display: 'grid', gap: 10, paddingRight: 4 }}>
+              {filteredTemplates.map((t) => (
+                <div key={t.id} style={{ background: 'var(--panel-sub)', border: '1px solid var(--border-solid)', borderRadius: 8, padding: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>{t.title}</span>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12, color: 'var(--text-dim)' }}>
+                      <span>{CATEGORY_LABELS[t.category]}</span>
+                      <span>·</span>
+                      <span style={{ color: 'var(--gold)' }}>+{t.baseXp} XP</span>
+                    </div>
+                  </div>
+                  {t.muscle && (
+                    <div style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 8 }}>
+                      Група м'язів: <strong style={{ color: 'var(--text)' }}>{t.muscle === 'push' ? 'Руки/плечі' : t.muscle === 'leg' ? 'Ноги' : 'Спина/кор'}</strong>
+                    </div>
+                  )}
+                  <div style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 6 }}>Варіанти виконання за рівнем:</div>
+                  <div style={{ display: 'grid', gap: 4 }}>
+                    {t.variants.map((v, i) => {
+                      const unlocked = level.level >= v.minLevel
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            background: unlocked ? 'var(--surface-raised)' : 'transparent',
+                            padding: '4px 8px',
+                            borderRadius: 4,
+                            fontSize: 12,
+                            border: unlocked ? '1px solid var(--border-solid)' : '1px dashed var(--border)',
+                          }}
+                        >
+                          <div>
+                            <span style={{ fontWeight: 600, color: unlocked ? 'var(--text)' : 'var(--text-dim)' }}>
+                              {v.minLevel} р. — {v.title}
+                            </span>
+                            {v.note && <span style={{ color: 'var(--text-dim)', marginLeft: 6 }}>({v.note})</span>}
+                          </div>
+                          <div>
+                            {unlocked ? (
+                              <span style={{ color: 'var(--good)', fontSize: 11 }}>✓ Доступно</span>
+                            ) : (
+                              <span style={{ color: 'var(--text-dim)', fontSize: 11 }}>ще {v.minLevel - level.level} рівнів</span>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 12, textAlign: 'right' }}>
+              <button type="button" className="btn btn-gold btn-sm" onClick={() => setShowCatalog(false)}>
+                Закрити
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
