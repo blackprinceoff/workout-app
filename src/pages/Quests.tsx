@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useGame } from '../state/GameContext'
 import {
   CATEGORY_LABELS,
@@ -22,6 +22,104 @@ const SORE_OPTIONS: { key: MuscleGroup; label: string }[] = [
   { key: 'leg', label: 'Ноги' },
   { key: 'core', label: 'Спина/кор' },
 ]
+
+function RestTimer() {
+  const [seconds, setSeconds] = useState(60)
+  const [timeLeft, setTimeLeft] = useState(60)
+  const [running, setRunning] = useState(false)
+  const timerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (running) {
+      timerRef.current = window.setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            setRunning(false)
+            playTimerDone()
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [running])
+
+  const selectPreset = (secs: number) => {
+    setSeconds(secs)
+    setTimeLeft(secs)
+    setRunning(false)
+  }
+
+  const toggleRun = () => {
+    if (timeLeft <= 0) setTimeLeft(seconds)
+    setRunning(!running)
+  }
+
+  const reset = () => {
+    setRunning(false)
+    setTimeLeft(seconds)
+  }
+
+  const formatTime = (sec: number) => {
+    const m = Math.floor(sec / 60)
+    const s = sec % 60
+    return m > 0 ? `${m}хв ${s < 10 ? '0' : ''}${s}с` : `${s}с`
+  }
+
+  return (
+    <div className="panel section-mb" style={{ padding: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>
+          <Timer size={16} /> Таймер відпочинку між підходами
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {[30, 45, 60, 90, 120].map((s) => (
+            <button
+              key={s}
+              type="button"
+              className={`btn btn-sm ${seconds === s ? 'btn-gold' : ''}`}
+              style={
+                seconds !== s
+                  ? { background: 'var(--surface-raised)', border: '1px solid var(--border-solid)', color: 'var(--text)', fontSize: 11, padding: '2px 8px' }
+                  : { fontSize: 11, padding: '2px 8px' }
+              }
+              onClick={() => selectPreset(s)}
+            >
+              {s >= 60 ? `${s / 60}хв` : `${s}с`}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--panel-sub)', padding: '10px 14px', borderRadius: 8 }}>
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 24, color: timeLeft === 0 ? 'var(--good)' : 'var(--gold-bright)' }}>
+          {formatTime(timeLeft)}
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            type="button"
+            className="btn btn-sm btn-gold"
+            onClick={toggleRun}
+          >
+            {running ? 'Пауза' : timeLeft === 0 ? 'Повторити' : 'Старт'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm"
+            style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-solid)', color: 'var(--text)' }}
+            onClick={reset}
+          >
+            Скинути
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function Quests() {
   const {
@@ -221,6 +319,8 @@ export function Quests() {
           стане легшим, у стилі відновлення. Позначення тримаються до кінця дня й скидаються наступного.
         </div>
       </div>
+
+      <RestTimer />
 
       <div className="panel section-mb" style={{ padding: 12 }}>
         <div className="settings-label" style={{ fontSize: 13, marginBottom: 6 }}>
