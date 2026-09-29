@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { useGame } from '../state/GameContext'
 import { QUEST_TEMPLATES } from '../game/quests'
 import { levelInfo } from '../game/leveling'
 import { CATEGORY_LABELS } from '../game/constants'
-import { CategoryGlyph, StatGlyph, Dumbbell, Search, Lock, Check } from '../components/Glyphs'
-import type { QuestCategory } from '../game/types'
+import { CategoryGlyph, StatGlyph, Dumbbell, Search, Lock, Check, X, Timer, Play, Pause, RotateCcw } from '../components/Glyphs'
+import { playTimerDone } from '../utils/sound'
+import type { QuestCategory, QuestTemplate } from '../game/types'
 
 export function Library() {
   const { state } = useGame()
@@ -12,6 +13,7 @@ export function Library() {
 
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<QuestCategory | 'all'>('all')
+  const [selectedTemplate, setSelectedTemplate] = useState<QuestTemplate | null>(null)
 
   const categories: { key: QuestCategory | 'all'; label: string }[] = [
     { key: 'all', label: 'Усі' },
@@ -40,7 +42,7 @@ export function Library() {
       <h1 className="page-title">
         <Dumbbell size={24} strokeWidth={1.6} /> Довідник вправ
       </h1>
-      <p className="page-sub">Енциклопедія бойових технік, варіацій та рівнів складності</p>
+      <p className="page-sub">Енциклопедія бойових технік, варіацій та рівнів складності. Натисни на вправу для деталей та тренування.</p>
 
       <div className="panel section-mb" style={{ display: 'grid', gap: 12 }}>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -91,7 +93,13 @@ export function Library() {
           const isUnlocked = !t.minLevel || t.minLevel <= currentLevel
 
           return (
-            <div key={t.id} className="panel" style={{ display: 'flex', flexDirection: 'column', gap: 12, opacity: isUnlocked ? 1 : 0.75 }}>
+            <div
+              key={t.id}
+              className="panel"
+              onClick={() => setSelectedTemplate(t)}
+              style={{ display: 'flex', flexDirection: 'column', gap: 12, opacity: isUnlocked ? 1 : 0.75, cursor: 'pointer', transition: 'transform 0.15s ease' }}
+              title="Натисніть для перегляду та таймера"
+            >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
@@ -188,6 +196,259 @@ export function Library() {
           Не знайдено жодної вправи за твоїм запитом.
         </div>
       )}
+
+      {selectedTemplate && (
+        <ExerciseDetailModal
+          template={selectedTemplate}
+          currentLevel={currentLevel}
+          onClose={() => setSelectedTemplate(null)}
+        />
+      )}
     </>
+  )
+}
+
+function ExerciseDetailModal({
+  template,
+  currentLevel,
+  onClose,
+}: {
+  template: QuestTemplate
+  currentLevel: number
+  onClose: () => void
+}) {
+  const [timerSeconds, setTimerSeconds] = useState(30)
+  const [timeLeft, setTimeLeft] = useState(30)
+  const [isRunning, setIsRunning] = useState(false)
+  const timerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (!isRunning) {
+      if (timerRef.current) clearInterval(timerRef.current)
+      return
+    }
+    timerRef.current = window.setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          setIsRunning(false)
+          playTimerDone()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [isRunning])
+
+  const toggleTimer = () => {
+    if (isRunning) {
+      setIsRunning(false)
+    } else {
+      if (timeLeft <= 0) setTimeLeft(timerSeconds)
+      setIsRunning(true)
+    }
+  }
+
+  const resetTimer = (secs: number) => {
+    setIsRunning(false)
+    setTimerSeconds(secs)
+    setTimeLeft(secs)
+  }
+
+  const isUnlocked = !template.minLevel || template.minLevel <= currentLevel
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0, 0, 0, 0.75)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: 16,
+      }}
+      onClick={onClose}
+    >
+      <div
+        className="panel"
+        style={{
+          width: '100%',
+          maxWidth: 520,
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          background: 'var(--surface)',
+          border: '1px solid var(--gold-dim)',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <CategoryGlyph category={template.category} size={16} />
+              <span style={{ fontSize: 12, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {CATEGORY_LABELS[template.category]}
+              </span>
+              {template.muscle && (
+                <span style={{ fontSize: 11, background: 'var(--surface-sub)', padding: '1px 6px', borderRadius: 4, color: 'var(--gold)' }}>
+                  {template.muscle}
+                </span>
+              )}
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', margin: 0 }}>{template.title}</h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-dim)',
+              cursor: 'pointer',
+              padding: 4,
+            }}
+            aria-label="Закрити"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', background: 'var(--surface-sub)', padding: 12, borderRadius: 8 }}>
+          <div>
+            <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>НАГОРОДА</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gold-bright)' }}>+{template.baseXp} XP</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>ПІДХОДИ</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{template.sets}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>БАЗОВИЙ ОБ'ЄМ</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
+              {template.base} {template.unit === 'reps' ? 'разів' : 'сек'}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>СКЛАДНІСТЬ</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{template.difficulty}/3</div>
+          </div>
+        </div>
+
+        {!isUnlocked && (
+          <div style={{ padding: 10, background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 6, color: 'var(--danger)', fontSize: 13 }}>
+            🔒 Ця вправа розблоковується на рівні {template.minLevel}. Поточний рівень: {currentLevel}.
+          </div>
+        )}
+
+        {template.variants && template.variants.length > 0 && (
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>
+              Варіації техніки за рівнями:
+            </div>
+            <div style={{ display: 'grid', gap: 6 }}>
+              {template.variants.map((v) => {
+                const vUnlocked = v.minLevel <= currentLevel
+                return (
+                  <div
+                    key={v.minLevel + v.title}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '8px 10px',
+                      borderRadius: 6,
+                      background: vUnlocked ? 'var(--surface-sub)' : 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid',
+                      borderColor: vUnlocked ? 'var(--border-solid)' : 'transparent',
+                      opacity: vUnlocked ? 1 : 0.6,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: vUnlocked ? 'var(--text)' : 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {vUnlocked ? <Check size={14} color="var(--good)" /> : <Lock size={14} />}
+                        <span>{v.title}</span>
+                      </div>
+                      {v.note && <div style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 2 }}>{v.note}</div>}
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        background: vUnlocked ? 'rgba(74, 222, 128, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                        color: vUnlocked ? 'var(--good)' : 'var(--text-dim)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      ур. {v.minLevel}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        <div style={{ borderTop: '1px solid var(--border-solid)', paddingTop: 14, display: 'grid', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
+            <Timer size={16} color="var(--gold)" />
+            <span>Інтерактивний таймер тренування / практики</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {[15, 30, 45, 60, 90].map((secs) => (
+              <button
+                key={secs}
+                type="button"
+                className={`btn btn-sm ${timerSeconds === secs ? 'btn-gold' : ''}`}
+                style={timerSeconds !== secs ? { background: 'var(--surface-sub)', border: '1px solid var(--border-solid)', color: 'var(--text)' } : undefined}
+                onClick={() => resetTimer(secs)}
+              >
+                {secs} сек
+              </button>
+            ))}
+          </div>
+
+          <div
+            style={{
+              background: 'var(--surface-sub)',
+              border: '1px solid var(--border-solid)',
+              borderRadius: 10,
+              padding: 16,
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 36, color: 'var(--gold-bright)', marginBottom: 8 }}>
+              {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
+              <button
+                type="button"
+                className="btn btn-gold btn-sm"
+                onClick={toggleTimer}
+                style={{ minWidth: 100 }}
+              >
+                {isRunning ? <><Pause size={14} /> Пауза</> : <><Play size={14} /> Старт</>}
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={() => resetTimer(timerSeconds)}
+                style={{ background: 'transparent', border: '1px solid var(--border-solid)', color: 'var(--text)' }}
+                title="Скинути"
+              >
+                <RotateCcw size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

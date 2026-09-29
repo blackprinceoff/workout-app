@@ -47,6 +47,10 @@ export {
   Volume2,
   Zap,
   Lock,
+  X,
+  Play,
+  Pause,
+  RotateCcw,
 } from 'lucide-react'
 
 export function Glyph({
