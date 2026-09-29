@@ -5,7 +5,7 @@ import { levelInfo } from '../game/leveling'
 import { CATEGORY_LABELS } from '../game/constants'
 import { CategoryGlyph, StatGlyph, Dumbbell, Search, Lock, Check, X, Timer, Play, Pause, RotateCcw } from '../components/Glyphs'
 import { playTimerDone } from '../utils/sound'
-import type { QuestCategory, QuestTemplate } from '../game/types'
+import type { MuscleGroup, QuestCategory, QuestTemplate } from '../game/types'
 
 export function Library() {
   const { state } = useGame()
@@ -13,6 +13,7 @@ export function Library() {
 
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<QuestCategory | 'all'>('all')
+  const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all')
   const [selectedTemplate, setSelectedTemplate] = useState<QuestTemplate | null>(null)
 
   const categories: { key: QuestCategory | 'all'; label: string }[] = [
@@ -24,9 +25,17 @@ export function Library() {
     { key: 'break', label: CATEGORY_LABELS.break },
   ]
 
+  const muscleFilters: { key: MuscleGroup | 'all'; label: string }[] = [
+    { key: 'all', label: 'Усі групи м\'язів' },
+    { key: 'push', label: 'Руки / плечі' },
+    { key: 'leg', label: 'Ноги' },
+    { key: 'core', label: 'Спина / кор' },
+  ]
+
   const filteredTemplates = useMemo(() => {
     return QUEST_TEMPLATES.filter((t) => {
       if (selectedCategory !== 'all' && t.category !== selectedCategory) return false
+      if (selectedMuscle !== 'all' && t.muscle !== selectedMuscle) return false
       if (search.trim()) {
         const q = search.toLowerCase()
         const matchesTitle = t.title.toLowerCase().includes(q)
@@ -35,7 +44,7 @@ export function Library() {
       }
       return true
     })
-  }, [selectedCategory, search])
+  }, [selectedCategory, selectedMuscle, search])
 
   return (
     <>
@@ -82,6 +91,24 @@ export function Library() {
               onClick={() => setSelectedCategory(c.key)}
             >
               {c.label}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {muscleFilters.map((m) => (
+            <button
+              key={m.key}
+              type="button"
+              className={`btn btn-sm ${selectedMuscle === m.key ? 'btn-gold' : ''}`}
+              style={
+                selectedMuscle !== m.key
+                  ? { background: 'var(--surface-sub)', border: '1px solid var(--border-solid)', color: 'var(--text)' }
+                  : undefined
+              }
+              onClick={() => setSelectedMuscle(m.key)}
+            >
+              {m.label}
             </button>
           ))}
         </div>
