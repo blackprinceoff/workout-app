@@ -147,6 +147,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Виконай 50 силових квестів',
     check: (s) => s.perCategoryDone.strength >= 50,
   },
+  {
+    id: 'water_master',
+    title: 'Водний магнат',
+    description: 'Випий загалом 50 склянок води',
+    check: (s) => {
+      const total = Object.values(s.waterByDate || {}).reduce((acc, val) => acc + val, 0)
+      return total >= 50
+    },
+  },
 ]
 
 export function checkAchievements(state: import('./types').GameState, level: number): string[] {
@@ -219,6 +228,10 @@ export function getAchievementProgress(id: string, state: import('./types').Game
       return `${Math.min(20, state.perCategoryDone.cardio)}/20`
     case 'strength_master':
       return `${Math.min(50, state.perCategoryDone.strength)}/50`
+    case 'water_master': {
+      const total = Object.values(state.waterByDate || {}).reduce((acc, val) => acc + val, 0)
+      return `${Math.min(50, total)}/50 скл.`
+    }
     default:
       return null
   }

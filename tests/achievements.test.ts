@@ -91,4 +91,13 @@ describe('getAchievementProgress', () => {
     }
     expect(getAchievementProgress('level_5', s, 5)).toBeNull()
   })
+
+  it('визначає досягнення Водний магнат', () => {
+    const s: GameState = {
+      ...createInitialState(),
+      waterByDate: { '2026-09-21': 25, '2026-09-22': 25 },
+    }
+    expect(checkAchievements(s, 1)).toContain('water_master')
+    expect(getAchievementProgress('water_master', s, 1)).toBe('50/50 скл.')
+  })
 })
