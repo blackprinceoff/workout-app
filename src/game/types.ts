@@ -59,6 +59,7 @@ export interface PlayerProfile {
   age: number
   heightCm: number
   weightKg: number
+  targetWeightKg: number
 }
 
 export interface GameSettings {

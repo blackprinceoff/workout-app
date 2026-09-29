@@ -57,6 +57,7 @@ type Action =
    | { type: 'ADD_CUSTOM_QUEST'; title: string; category: QuestCategory; xp: number; stat?: StatKey }
    | { type: 'DELETE_CUSTOM_QUEST'; questId: string }
    | { type: 'SET_WATER'; count: number }
+   | { type: 'SET_TARGET_WEIGHT'; weightKg: number }
 
 function unlockAchievements(
   state: GameState,
@@ -280,6 +281,14 @@ export function reducer(state: GameState, action: Action): GameState {
         },
       }
     }
+    case 'SET_TARGET_WEIGHT': {
+      const w = Math.round(action.weightKg * 10) / 10
+      if (!Number.isFinite(w) || w <= 0 || w > 500) return state
+      return {
+        ...state,
+        profile: { ...state.profile, targetWeightKg: w },
+      }
+    }
     case 'CLEAR_EVENTS':
       return { ...state, events: [] }
     case 'SET_NAME':
@@ -404,9 +413,10 @@ interface GameContextValue {
   doExport: () => void
   addCustomQuest: (title: string, category: QuestCategory, xp: number, stat?: StatKey) => void
   deleteCustomQuest: (questId: string) => void
-  waterCount: number
-  setWater: (count: number) => void
-}
+   waterCount: number
+   setWater: (count: number) => void
+   setTargetWeight: (weightKg: number) => void
+ }
 
 const GameContext = createContext<GameContextValue | null>(null)
 
@@ -501,6 +511,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       deleteCustomQuest: (questId) => dispatch({ type: 'DELETE_CUSTOM_QUEST', questId }),
       waterCount: state.waterByDate[state.currentDate] ?? 0,
       setWater: (count) => dispatch({ type: 'SET_WATER', count }),
+      setTargetWeight: (weightKg) => dispatch({ type: 'SET_TARGET_WEIGHT', weightKg }),
     }),
     [state, level, statsList, todayQuests],
   )

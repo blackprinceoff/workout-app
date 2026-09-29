@@ -24,6 +24,7 @@ export function Settings() {
     toggleSound,
     toggleNotifications,
     toggleTheme,
+    setTargetWeight,
     importState,
     resetGame,
     doExport,
@@ -52,15 +53,6 @@ export function Settings() {
     navigator.clipboard.writeText(summary)
     setCopiedSummary(true)
     window.setTimeout(() => setCopiedSummary(false), 2000)
-  }
-
-  const saveWeight = () => {
-    const v = Number(weightInput)
-    if (!Number.isFinite(v) || v <= 0 || v > 400) return
-    addWeight(Math.round(v * 10) / 10)
-    setWeightInput(String(Math.round(v * 10) / 10))
-    setWeightSaved(true)
-    window.setTimeout(() => setWeightSaved(false), 2000)
   }
 
   const exportWeightCsv = () => {
@@ -169,27 +161,18 @@ export function Settings() {
             <span style={{ color: 'var(--gold)', fontSize: 13 }}>Записано</span>
           )}
         </div>
-        <div className="form-grid">
+        <div className="form-grid" style={{ marginTop: 12 }}>
           <div className="field">
-            <label htmlFor="weight-value">Вага, кг</label>
+            <label htmlFor="target-weight">Цільова вага, кг</label>
             <input
-              id="weight-value"
+              id="target-weight"
               type="number"
               min={30}
               max={400}
               step={0.1}
-              value={weightInput}
-              onChange={(e) => setWeightInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') saveWeight()
-              }}
+              value={state.profile.targetWeightKg}
+              onChange={(e) => setTargetWeight(Number(e.target.value) || 0)}
             />
-          </div>
-          <div className="field">
-            <label htmlFor="weight-save">&nbsp;</label>
-            <button id="weight-save" className="btn btn-gold" onClick={saveWeight}>
-              Записати
-            </button>
           </div>
         </div>
         {recent.length > 0 && (

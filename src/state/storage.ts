@@ -32,7 +32,7 @@ const EMPTY_CATEGORY: Record<QuestCategory, number> = {
 const HABIT_HISTORY_CAP = 90
 
 export function initialProfile(): PlayerProfile {
-  return { name: 'Новачок', age: 21, heightCm: 183, weightKg: 72 }
+  return { name: 'Новачок', age: 21, heightCm: 183, weightKg: 72, targetWeightKg: 72 }
 }
 
 export function initialSettings(): GameSettings {
@@ -133,6 +133,13 @@ function migrateRaw(raw: unknown): unknown {
   if (version < 10) {
     next.waterByDate = {}
   }
+  if (version < 11) {
+    const prof = (next.profile ?? {}) as Record<string, unknown>
+    if (typeof prof.targetWeightKg !== 'number') {
+      prof.targetWeightKg = typeof prof.weightKg === 'number' ? prof.weightKg : 72
+    }
+    next.profile = prof
+  }
   return next
 }
 
@@ -163,6 +170,7 @@ export function normalizeState(raw: unknown): GameState | null {
       age: toNonNeg(r.profile?.age, base.profile.age),
       heightCm: toNonNeg(r.profile?.heightCm, base.profile.heightCm),
       weightKg: toNonNeg(r.profile?.weightKg, base.profile.weightKg),
+      targetWeightKg: toNonNeg(r.profile?.targetWeightKg, r.profile?.weightKg ?? base.profile.targetWeightKg),
     },
     settings: {
       sound: typeof r.settings?.sound === 'boolean' ? r.settings.sound : base.settings.sound,
