@@ -226,6 +226,24 @@ export function Quests() {
         <div className="settings-label" style={{ fontSize: 13, marginBottom: 6 }}>
           📝 Нотатка дня / Самопочуття
         </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
+          {[
+            '💪 Чудове тренування, повний заряд!',
+            '🔥 Важкий день, але я впорався!',
+            '🧘 Легкий день відновлення.',
+            '⚡ Бадьорий і продуктивний день.',
+          ].map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              className="btn btn-sm"
+              style={{ fontSize: 11, padding: '2px 8px', background: 'var(--surface-raised)', color: 'var(--text-dim)', border: '1px solid var(--border-solid)' }}
+              onClick={() => setNote(currentNote ? `${currentNote} ${preset}` : preset)}
+            >
+              {preset}
+            </button>
+          ))}
+        </div>
         <textarea
           value={currentNote}
           onChange={(e) => setNote(e.target.value)}
