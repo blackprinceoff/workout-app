@@ -244,10 +244,25 @@ function ExerciseDetailModal({
   currentLevel: number
   onClose: () => void
 }) {
+  const { state } = useGame()
   const [timerSeconds, setTimerSeconds] = useState(30)
   const [timeLeft, setTimeLeft] = useState(30)
   const [isRunning, setIsRunning] = useState(false)
   const timerRef = useRef<number | null>(null)
+
+  const completions = useMemo(() => {
+    let count = 0
+    let totalXp = 0
+    for (const quests of Object.values(state.questsByDate)) {
+      for (const q of quests) {
+        if (q.templateId === template.id && q.done) {
+          count++
+          totalXp += q.xp
+        }
+      }
+    }
+    return { count, totalXp }
+  }, [state.questsByDate, template.id])
 
   useEffect(() => {
     if (!isRunning) {
@@ -357,14 +372,12 @@ function ExerciseDetailModal({
             <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{template.sets}</div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>БАЗОВИЙ ОБ'ЄМ</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
-              {template.base} {template.unit === 'reps' ? 'разів' : 'сек'}
-            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>ВИКОНАНО РАЗІВ</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{completions.count}</div>
           </div>
           <div>
-            <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>СКЛАДНІСТЬ</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{template.difficulty}/3</div>
+            <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>ЗАРОБЛЕНО XP</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gold)' }}>{completions.totalXp}</div>
           </div>
         </div>
 
