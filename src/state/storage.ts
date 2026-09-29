@@ -63,6 +63,7 @@ export function createInitialState(): GameState {
     sickUsed: [],
     habitHistory: [],
     weightHistory: [],
+    bodyMeasurements: [],
     swapsUsed: 0,
     soreGroups: [],
     notesByDate: {},
@@ -147,6 +148,9 @@ function migrateRaw(raw: unknown): unknown {
     }
     next.settings = s
   }
+  if (version < 13) {
+    next.bodyMeasurements = []
+  }
   return next
 }
 
@@ -212,6 +216,13 @@ export function normalizeState(raw: unknown): GameState | null {
             Number.isFinite(rec.valueKg) &&
             rec.valueKg >= 0
           )
+        })
+      : [],
+    bodyMeasurements: Array.isArray(r.bodyMeasurements)
+      ? r.bodyMeasurements.filter((bm): bm is GameState['bodyMeasurements'][number] => {
+          if (!bm || typeof bm !== 'object') return false
+          const rec = bm as { date?: unknown }
+          return isDateKey(rec.date)
         })
       : [],
     swapsUsed: typeof r.swapsUsed === 'number' && Number.isFinite(r.swapsUsed) ? r.swapsUsed : 0,

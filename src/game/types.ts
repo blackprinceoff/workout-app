@@ -89,6 +89,15 @@ export interface WeightEntry {
   valueKg: number
 }
 
+export interface BodyMeasurementEntry {
+  date: string
+  chest?: number
+  waist?: number
+  hips?: number
+  arms?: number
+  thighs?: number
+}
+
 export interface GameState {
   version: number
   createdAt: string
@@ -111,6 +120,7 @@ export interface GameState {
   sickUsed: string[]
   habitHistory: HabitPoint[]
   weightHistory: WeightEntry[]
+  bodyMeasurements: BodyMeasurementEntry[]
   swapsUsed: number
   soreGroups: MuscleGroup[]
   notesByDate: Record<string, string>

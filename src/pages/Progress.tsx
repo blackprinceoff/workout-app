@@ -18,8 +18,30 @@ import {
 import { formatUa, lastNDays, weekdayShort } from '../game/dates'
 
 export function Progress() {
-  const { state } = useGame()
+  const { state, addBodyMeasurements, removeBodyMeasurements } = useGame()
   const level = levelInfo(state.totalXp)
+
+  const [chestInput, setChestInput] = useState('')
+  const [waistInput, setWaistInput] = useState('')
+  const [hipsInput, setHipsInput] = useState('')
+  const [armsInput, setArmsInput] = useState('')
+  const [thighsInput, setThighsInput] = useState('')
+
+  const handleSaveMeasurements = (e: React.FormEvent) => {
+    e.preventDefault()
+    addBodyMeasurements({
+      chest: chestInput ? Number(chestInput) : undefined,
+      waist: waistInput ? Number(waistInput) : undefined,
+      hips: hipsInput ? Number(hipsInput) : undefined,
+      arms: armsInput ? Number(armsInput) : undefined,
+      thighs: thighsInput ? Number(thighsInput) : undefined,
+    })
+    setChestInput('')
+    setWaistInput('')
+    setHipsInput('')
+    setArmsInput('')
+    setThighsInput('')
+  }
 
   const days14 = useMemo(() => lastNDays(14, state.currentDate), [state.currentDate])
   const days7 = useMemo(() => lastNDays(7, state.currentDate), [state.currentDate])
@@ -539,6 +561,109 @@ export function Progress() {
           </div>
         </div>
       )}
+
+      <div className="panel section-mb">
+        <div className="panel-title">
+          📏 Вимірювання тіла (обхвати, см)
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+          Записуй параметри обхватів для відстеження прогресу трансформації тіла.
+        </p>
+        <form onSubmit={handleSaveMeasurements} style={{ marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: 8, marginBottom: 10 }}>
+            <div>
+              <label style={{ fontSize: 11, color: 'var(--text-dim)', display: 'block', marginBottom: 2 }}>Груди</label>
+              <input
+                type="number"
+                step="0.5"
+                placeholder="см"
+                value={chestInput}
+                onChange={(e) => setChestInput(e.target.value)}
+                style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid var(--border-solid)', background: 'var(--surface-raised)', color: 'var(--text)', fontSize: 13 }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: 'var(--text-dim)', display: 'block', marginBottom: 2 }}>Талія</label>
+              <input
+                type="number"
+                step="0.5"
+                placeholder="см"
+                value={waistInput}
+                onChange={(e) => setWaistInput(e.target.value)}
+                style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid var(--border-solid)', background: 'var(--surface-raised)', color: 'var(--text)', fontSize: 13 }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: 'var(--text-dim)', display: 'block', marginBottom: 2 }}>Стегна</label>
+              <input
+                type="number"
+                step="0.5"
+                placeholder="см"
+                value={hipsInput}
+                onChange={(e) => setHipsInput(e.target.value)}
+                style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid var(--border-solid)', background: 'var(--surface-raised)', color: 'var(--text)', fontSize: 13 }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: 'var(--text-dim)', display: 'block', marginBottom: 2 }}>Руки</label>
+              <input
+                type="number"
+                step="0.5"
+                placeholder="см"
+                value={armsInput}
+                onChange={(e) => setArmsInput(e.target.value)}
+                style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid var(--border-solid)', background: 'var(--surface-raised)', color: 'var(--text)', fontSize: 13 }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: 'var(--text-dim)', display: 'block', marginBottom: 2 }}>Ноги</label>
+              <input
+                type="number"
+                step="0.5"
+                placeholder="см"
+                value={thighsInput}
+                onChange={(e) => setThighsInput(e.target.value)}
+                style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid var(--border-solid)', background: 'var(--surface-raised)', color: 'var(--text)', fontSize: 13 }}
+              />
+            </div>
+          </div>
+          <button type="submit" className="btn btn-primary" style={{ fontSize: 13, padding: '6px 14px' }}>
+            Зберегти заміри на сьогодні ({formatUa(state.currentDate)})
+          </button>
+        </form>
+
+        {state.bodyMeasurements.length > 0 ? (
+          <div style={{ display: 'grid', gap: 8, maxHeight: 250, overflowY: 'auto' }}>
+            {state.bodyMeasurements.slice(-10).reverse().map((m) => (
+              <div key={m.date} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--panel-sub)', padding: '8px 12px', borderRadius: 6, fontSize: 13 }}>
+                <div>
+                  <div style={{ color: 'var(--gold)', fontWeight: 600, marginBottom: 2 }}>{formatUa(m.date)}</div>
+                  <div style={{ color: 'var(--text-dim)', fontSize: 12, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    {m.chest !== undefined && <span>Груди: <strong style={{ color: 'var(--text)' }}>{m.chest}</strong> см</span>}
+                    {m.waist !== undefined && <span>Талія: <strong style={{ color: 'var(--text)' }}>{m.waist}</strong> см</span>}
+                    {m.hips !== undefined && <span>Стегна: <strong style={{ color: 'var(--text)' }}>{m.hips}</strong> см</span>}
+                    {m.arms !== undefined && <span>Руки: <strong style={{ color: 'var(--text)' }}>{m.arms}</strong> см</span>}
+                    {m.thighs !== undefined && <span>Ноги: <strong style={{ color: 'var(--text)' }}>{m.thighs}</strong> см</span>}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeBodyMeasurements(m.date)}
+                  className="btn"
+                  style={{ background: 'transparent', color: 'var(--danger)', fontSize: 11, padding: '2px 6px' }}
+                  title="Видалити заміри"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ fontSize: 13, color: 'var(--text-dim)', fontStyle: 'italic' }}>
+            Ще немає збережених замірів. Введи показники вище та натисни зберегти.
+          </div>
+        )}
+      </div>
 
       {allNotes.length > 0 && (
         <div className="panel section-mb">

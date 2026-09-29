@@ -24,6 +24,7 @@ import { classNameFor, levelInfo, xpMultiplier } from '../game/leveling'
 import { effectiveLoad, generateDailyQuests, swapFor, unlocksBetween } from '../game/quests'
 import { DAILY_COMPLETE_BONUS, SWAPS_PER_DAY } from '../game/constants'
 import type {
+  BodyMeasurementEntry,
   DailyQuest,
   GameEvent,
   GameState,
@@ -56,9 +57,11 @@ type Action =
   | { type: 'ROLLOVER' }
    | { type: 'ADD_CUSTOM_QUEST'; title: string; category: QuestCategory; xp: number; stat?: StatKey }
    | { type: 'DELETE_CUSTOM_QUEST'; questId: string }
-   | { type: 'SET_WATER'; count: number }
-   | { type: 'SET_TARGET_WEIGHT'; weightKg: number }
-   | { type: 'SET_VOLUME'; volume: number }
+    | { type: 'SET_WATER'; count: number }
+    | { type: 'SET_TARGET_WEIGHT'; weightKg: number }
+    | { type: 'SET_VOLUME'; volume: number }
+    | { type: 'ADD_BODY_MEASUREMENTS'; entry: Omit<BodyMeasurementEntry, 'date'> }
+    | { type: 'REMOVE_BODY_MEASUREMENTS'; date: string }
 
 function unlockAchievements(
   state: GameState,
@@ -313,6 +316,18 @@ export function reducer(state: GameState, action: Action): GameState {
         ...state,
         weightHistory: state.weightHistory.filter((w) => w.date !== action.date),
       }
+    case 'ADD_BODY_MEASUREMENTS': {
+      const rest = state.bodyMeasurements.filter((bm) => bm.date !== state.currentDate)
+      const next = [...rest, { date: state.currentDate, ...action.entry }].sort((a, b) =>
+        a.date < b.date ? -1 : 1,
+      )
+      return { ...state, bodyMeasurements: next.slice(-200) }
+    }
+    case 'REMOVE_BODY_MEASUREMENTS':
+      return {
+        ...state,
+        bodyMeasurements: state.bodyMeasurements.filter((bm) => bm.date !== action.date),
+      }
     case 'TOGGLE_SOUND':
       return { ...state, settings: { ...state.settings, sound: !state.settings.sound } }
     case 'TOGGLE_NOTIFICATIONS':
@@ -426,6 +441,8 @@ interface GameContextValue {
    setWater: (count: number) => void
    setTargetWeight: (weightKg: number) => void
    setVolume: (volume: number) => void
+   addBodyMeasurements: (entry: Omit<BodyMeasurementEntry, 'date'>) => void
+   removeBodyMeasurements: (date: string) => void
  }
 
 const GameContext = createContext<GameContextValue | null>(null)
@@ -523,6 +540,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
        setWater: (count) => dispatch({ type: 'SET_WATER', count }),
        setTargetWeight: (weightKg) => dispatch({ type: 'SET_TARGET_WEIGHT', weightKg }),
        setVolume: (volume) => dispatch({ type: 'SET_VOLUME', volume }),
+       addBodyMeasurements: (entry) => dispatch({ type: 'ADD_BODY_MEASUREMENTS', entry }),
+       removeBodyMeasurements: (date) => dispatch({ type: 'REMOVE_BODY_MEASUREMENTS', date }),
      }),
     [state, level, statsList, todayQuests],
   )
