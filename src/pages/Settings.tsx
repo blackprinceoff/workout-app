@@ -24,6 +24,7 @@ export function Settings() {
     toggleNotifications,
     toggleTheme,
     setTargetWeight,
+    setVolume,
     importState,
     resetGame,
     doExport,
@@ -291,6 +292,24 @@ export function Settings() {
             />
           </div>
         </div>
+        {state.settings.sound && (
+          <div className="settings-row" style={{ marginTop: 8, alignItems: 'center' }}>
+            <div>
+              <div className="settings-label" style={{ fontSize: 13 }}>Гучність звуку</div>
+              <div className="settings-hint">Рівень гучності ефектів ({Math.round((state.settings.volume ?? 0.8) * 100)}%)</div>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={state.settings.volume ?? 0.8}
+              onChange={(e) => setVolume(Number(e.target.value))}
+              style={{ width: 120, accentColor: 'var(--gold)' }}
+              aria-label="Гучність звуку"
+            />
+          </div>
+        )}
         <div className="settings-row" style={{ marginTop: 12 }}>
           <div>
             <div className="settings-label">Світла тема оформлення</div>
