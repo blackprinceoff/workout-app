@@ -471,6 +471,17 @@ export function Progress() {
               </span>
             </div>
           )}
+          {state.profile.targetWeightKg > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '8px 10px', background: 'var(--panel-sub)', borderRadius: 6, fontSize: 13 }}>
+              <span style={{ color: 'var(--text-dim)' }}>Цільова вага:</span>
+              <span>
+                <strong>{state.profile.targetWeightKg} кг</strong>
+                <span style={{ color: 'var(--text-dim)', marginLeft: 8 }}>
+                  ({Math.abs(Math.round((latestWeight - state.profile.targetWeightKg) * 10) / 10)} кг до цілі)
+                </span>
+              </span>
+            </div>
+          )}
           <div style={{ display: 'grid', gap: 6 }}>
             {state.weightHistory.slice(-5).reverse().map((w, i) => {
               const prev = state.weightHistory[state.weightHistory.length - 1 - i - 1]
