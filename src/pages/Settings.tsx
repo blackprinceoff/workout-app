@@ -19,7 +19,6 @@ export function Settings() {
     state,
     setName,
     updateProfile,
-    addWeight,
     removeWeight,
     toggleSound,
     toggleNotifications,
@@ -32,9 +31,6 @@ export function Settings() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [importError, setImportError] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
-  const latestWeight = state.weightHistory[state.weightHistory.length - 1]?.valueKg ?? state.profile.weightKg
-  const [weightInput, setWeightInput] = useState(String(latestWeight))
-  const [weightSaved, setWeightSaved] = useState(false)
 
   const recent = state.weightHistory.slice(-6).reverse()
 
@@ -152,14 +148,11 @@ export function Settings() {
         </div>
         <div className="settings-row">
           <div>
-            <div className="settings-label">Щотижневий запис</div>
+            <div className="settings-label">Цільова вага</div>
             <div className="settings-hint">
-              Один запис на день; зміни видно одразу в списку
+              Встановіть бажану вагу для відстеження прогресу
             </div>
           </div>
-          {weightSaved && (
-            <span style={{ color: 'var(--gold)', fontSize: 13 }}>Записано</span>
-          )}
         </div>
         <div className="form-grid" style={{ marginTop: 12 }}>
           <div className="field">
