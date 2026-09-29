@@ -546,7 +546,29 @@ export function Quests() {
           </div>
         ) : (
           <form onSubmit={handleAddCustom} style={{ display: 'grid', gap: 10 }}>
-            <div className="settings-label" style={{ fontSize: 13 }}>Новий власний квест</div>
+            <div className="settings-label" style={{ fontSize: 13 }}>Швидкі шаблони власних квестів</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
+              {[
+                { title: '🔥 Планка 60с', category: 'core' as QuestCategory, xp: 15, stat: 'strength' as StatKey },
+                { title: '💪 50 Віджимань', category: 'strength' as QuestCategory, xp: 20, stat: 'strength' as StatKey },
+                { title: '🏃‍♂️ Кардіо 15 хв', category: 'cardio' as QuestCategory, xp: 25, stat: 'endurance' as StatKey },
+                { title: '🧘 Ранкова розтяжка', category: 'mobility' as QuestCategory, xp: 15, stat: 'agility' as StatKey },
+              ].map((preset) => (
+                <button
+                  key={preset.title}
+                  type="button"
+                  className="btn btn-sm"
+                  style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-solid)', color: 'var(--text)', fontSize: 12 }}
+                  onClick={() => {
+                    addCustomQuest(preset.title, preset.category, preset.xp, preset.stat)
+                    setShowAddCustom(false)
+                  }}
+                >
+                  + {preset.title} (+{preset.xp} XP)
+                </button>
+              ))}
+            </div>
+            <div className="settings-label" style={{ fontSize: 13, marginTop: 4 }}>Або створити власний квест вручну</div>
             <div className="field">
               <input
                 type="text"
