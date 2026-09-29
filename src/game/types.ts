@@ -121,6 +121,7 @@ export interface GameState {
   habitHistory: HabitPoint[]
   weightHistory: WeightEntry[]
   bodyMeasurements: BodyMeasurementEntry[]
+  favoriteExerciseIds: string[]
   swapsUsed: number
   soreGroups: MuscleGroup[]
   notesByDate: Record<string, string>

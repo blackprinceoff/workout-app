@@ -8,16 +8,17 @@ import { playTimerDone } from '../utils/sound'
 import type { MuscleGroup, QuestCategory, QuestTemplate } from '../game/types'
 
 export function Library() {
-  const { state } = useGame()
+  const { state, toggleFavoriteExercise } = useGame()
   const currentLevel = levelInfo(state.totalXp).level
 
   const [search, setSearch] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<QuestCategory | 'all'>('all')
+  const [selectedCategory, setSelectedCategory] = useState<QuestCategory | 'all' | 'favorites'>('all')
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all')
   const [selectedTemplate, setSelectedTemplate] = useState<QuestTemplate | null>(null)
 
-  const categories: { key: QuestCategory | 'all'; label: string }[] = [
+  const categories: { key: QuestCategory | 'all' | 'favorites'; label: string }[] = [
     { key: 'all', label: 'Усі' },
+    { key: 'favorites', label: '⭐ Улюблені' },
     { key: 'strength', label: CATEGORY_LABELS.strength },
     { key: 'core', label: CATEGORY_LABELS.core },
     { key: 'cardio', label: CATEGORY_LABELS.cardio },
@@ -34,7 +35,11 @@ export function Library() {
 
   const filteredTemplates = useMemo(() => {
     return QUEST_TEMPLATES.filter((t) => {
-      if (selectedCategory !== 'all' && t.category !== selectedCategory) return false
+      if (selectedCategory === 'favorites') {
+        if (!state.favoriteExerciseIds?.includes(t.id)) return false
+      } else if (selectedCategory !== 'all' && t.category !== selectedCategory) {
+        return false
+      }
       if (selectedMuscle !== 'all' && t.muscle !== selectedMuscle) return false
       if (search.trim()) {
         const q = search.toLowerCase()
@@ -44,7 +49,7 @@ export function Library() {
       }
       return true
     })
-  }, [selectedCategory, selectedMuscle, search])
+  }, [selectedCategory, selectedMuscle, search, state.favoriteExerciseIds])
 
   return (
     <>
@@ -118,6 +123,7 @@ export function Library() {
         {filteredTemplates.map((t) => {
           const unlockedVariants = t.variants?.filter((v) => v.minLevel <= currentLevel) ?? []
           const isUnlocked = !t.minLevel || t.minLevel <= currentLevel
+          const isFav = state.favoriteExerciseIds?.includes(t.id)
 
           return (
             <div
@@ -150,9 +156,29 @@ export function Library() {
                   </div>
                   <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', margin: 0 }}>{t.title}</h3>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface-sub)', padding: '4px 8px', borderRadius: 6 }}>
-                  {t.stat && <StatGlyph stat={t.stat} size={14} />}
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--gold)' }}>+{t.baseXp} XP</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleFavoriteExercise(t.id)
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: isFav ? 'var(--gold-bright)' : 'var(--text-dim)',
+                      fontSize: 18,
+                      padding: 4,
+                    }}
+                    title={isFav ? 'Видалити з улюблених' : 'Додати в улюблені'}
+                  >
+                    {isFav ? '★' : '☆'}
+                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surface-sub)', padding: '4px 8px', borderRadius: 6 }}>
+                    {t.stat && <StatGlyph stat={t.stat} size={14} />}
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--gold)' }}>+{t.baseXp} XP</span>
+                  </div>
                 </div>
               </div>
 

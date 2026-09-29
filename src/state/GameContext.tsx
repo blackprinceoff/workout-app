@@ -62,6 +62,7 @@ type Action =
     | { type: 'SET_VOLUME'; volume: number }
     | { type: 'ADD_BODY_MEASUREMENTS'; entry: Omit<BodyMeasurementEntry, 'date'> }
     | { type: 'REMOVE_BODY_MEASUREMENTS'; date: string }
+    | { type: 'TOGGLE_FAVORITE_EXERCISE'; templateId: string }
 
 function unlockAchievements(
   state: GameState,
@@ -328,6 +329,12 @@ export function reducer(state: GameState, action: Action): GameState {
         ...state,
         bodyMeasurements: state.bodyMeasurements.filter((bm) => bm.date !== action.date),
       }
+    case 'TOGGLE_FAVORITE_EXERCISE': {
+      const id = action.templateId
+      const favs = state.favoriteExerciseIds || []
+      const nextFavs = favs.includes(id) ? favs.filter((x) => x !== id) : [...favs, id]
+      return { ...state, favoriteExerciseIds: nextFavs }
+    }
     case 'TOGGLE_SOUND':
       return { ...state, settings: { ...state.settings, sound: !state.settings.sound } }
     case 'TOGGLE_NOTIFICATIONS':
@@ -443,7 +450,8 @@ interface GameContextValue {
    setVolume: (volume: number) => void
    addBodyMeasurements: (entry: Omit<BodyMeasurementEntry, 'date'>) => void
    removeBodyMeasurements: (date: string) => void
- }
+   toggleFavoriteExercise: (templateId: string) => void
+  }
 
 const GameContext = createContext<GameContextValue | null>(null)
 
@@ -542,7 +550,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
        setVolume: (volume) => dispatch({ type: 'SET_VOLUME', volume }),
        addBodyMeasurements: (entry) => dispatch({ type: 'ADD_BODY_MEASUREMENTS', entry }),
        removeBodyMeasurements: (date) => dispatch({ type: 'REMOVE_BODY_MEASUREMENTS', date }),
-     }),
+       toggleFavoriteExercise: (templateId) => dispatch({ type: 'TOGGLE_FAVORITE_EXERCISE', templateId }),
+      }),
     [state, level, statsList, todayQuests],
   )
 
