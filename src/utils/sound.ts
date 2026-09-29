@@ -1,5 +1,18 @@
 let audioCtx: AudioContext | null = null
 
+function getStoredVolume(): number {
+  if (typeof window === 'undefined') return 0.8
+  try {
+    const raw = localStorage.getItem('fitquest-state-v2')
+    if (!raw) return 0.8
+    const obj = JSON.parse(raw)
+    const v = obj?.settings?.volume
+    return typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0.8
+  } catch {
+    return 0.8
+  }
+}
+
 function ctx(): AudioContext | null {
   if (typeof window === 'undefined') return null
   if (!audioCtx) audioCtx = new AudioContext()
@@ -13,6 +26,9 @@ function tone(
   type: OscillatorType = 'sine',
   vol = 0.12,
 ) {
+  const masterVol = getStoredVolume()
+  const effectiveVol = vol * masterVol
+  if (effectiveVol <= 0.0001) return
   const ac = ctx()
   if (!ac) return
   const osc = ac.createOscillator()
@@ -20,7 +36,7 @@ function tone(
   osc.type = type
   osc.frequency.value = freq
   gain.gain.setValueAtTime(0.0001, ac.currentTime + start)
-  gain.gain.exponentialRampToValueAtTime(vol, ac.currentTime + start + 0.02)
+  gain.gain.exponentialRampToValueAtTime(effectiveVol, ac.currentTime + start + 0.02)
   gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + start + duration)
   osc.connect(gain)
   gain.connect(ac.destination)

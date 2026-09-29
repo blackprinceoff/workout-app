@@ -36,7 +36,7 @@ export function initialProfile(): PlayerProfile {
 }
 
 export function initialSettings(): GameSettings {
-  return { sound: true, notifications: false, theme: 'dark' }
+  return { sound: true, notifications: false, theme: 'dark', volume: 0.8 }
 }
 
 export function createInitialState(): GameState {
@@ -140,6 +140,13 @@ function migrateRaw(raw: unknown): unknown {
     }
     next.profile = prof
   }
+  if (version < 12) {
+    const s = (next.settings ?? {}) as Record<string, unknown>
+    if (typeof s.volume !== 'number') {
+      s.volume = 0.8
+    }
+    next.settings = s
+  }
   return next
 }
 
@@ -179,6 +186,7 @@ export function normalizeState(raw: unknown): GameState | null {
           ? r.settings.notifications
           : base.settings.notifications,
       theme: r.settings?.theme === 'light' ? 'light' : 'dark',
+      volume: typeof r.settings?.volume === 'number' && Number.isFinite(r.settings.volume) ? Math.max(0, Math.min(1, r.settings.volume)) : base.settings.volume,
     },
     questsByDate,
     unlockedAchievements:
