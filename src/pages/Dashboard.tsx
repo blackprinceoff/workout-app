@@ -478,23 +478,43 @@ function WaterTracker() {
         <div className="settings-hint">
           Ціль — 8 склянок (2 л) на день для підтримки тонусу та відновлення.
         </div>
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           <button
             type="button"
             className="btn btn-sm"
             onClick={() => setWater(Math.max(0, waterCount - 1))}
             disabled={waterCount <= 0}
-            style={{ padding: '2px 8px', fontSize: 12 }}
+            style={{ padding: '2px 6px', fontSize: 11, background: 'var(--surface-raised)', color: 'var(--text)', border: '1px solid var(--border-solid)' }}
+            title="Зменшити на 1 склянку"
           >
-            -
+            -1
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() => setWater(waterCount + 1)}
+            style={{ padding: '2px 6px', fontSize: 11, background: 'var(--surface-raised)', color: 'var(--text)', border: '1px solid var(--border-solid)' }}
+            title="+250 мл (1 склянка)"
+          >
+            +250мл
           </button>
           <button
             type="button"
             className="btn btn-sm btn-gold"
-            onClick={() => setWater(waterCount + 1)}
-            style={{ padding: '2px 8px', fontSize: 12 }}
+            onClick={() => setWater(waterCount + 2)}
+            style={{ padding: '2px 6px', fontSize: 11 }}
+            title="+500 мл (2 склянки)"
           >
-            + Склянка
+            +500мл
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() => setWater(waterCount + 4)}
+            style={{ padding: '2px 6px', fontSize: 11, background: 'var(--surface-raised)', color: 'var(--text)', border: '1px solid var(--border-solid)' }}
+            title="+1000 мл (4 склянки)"
+          >
+            +1л
           </button>
         </div>
       </div>
