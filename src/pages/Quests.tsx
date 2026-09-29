@@ -50,6 +50,7 @@ export function Quests() {
   const [filterCategory, setFilterCategory] = useState<QuestCategory | 'all'>('all')
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'done'>('all')
   const [questSearch, setQuestSearch] = useState('')
+  const [questSort, setQuestSort] = useState<'default' | 'xp-desc' | 'xp-asc' | 'difficulty'>('default')
   const [showCatalog, setShowCatalog] = useState(false)
   const [catalogCat, setCatalogCat] = useState<QuestCategory | 'all'>('all')
   const [catalogSearch, setCatalogSearch] = useState('')
@@ -86,8 +87,15 @@ export function Quests() {
           q.description.toLowerCase().includes(qLower),
       )
     }
+    if (questSort === 'xp-desc') {
+      list = [...list].sort((a, b) => b.xp - a.xp)
+    } else if (questSort === 'xp-asc') {
+      list = [...list].sort((a, b) => a.xp - b.xp)
+    } else if (questSort === 'difficulty') {
+      list = [...list].sort((a, b) => b.difficulty - a.difficulty)
+    }
     return list
-  }, [todayQuests, filterCategory, filterStatus, questSearch])
+  }, [todayQuests, filterCategory, filterStatus, questSearch, questSort])
 
   const handleAddCustom = (e: React.FormEvent) => {
     e.preventDefault()
@@ -290,14 +298,15 @@ export function Quests() {
         </div>
       )}
 
-      <div style={{ marginBottom: 12 }}>
+      <div style={{ marginBottom: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <input
           type="text"
           value={questSearch}
           onChange={(e) => setQuestSearch(e.target.value)}
           placeholder="Пошук квестів за назвою чи описом..."
           style={{
-            width: '100%',
+            flex: 1,
+            minWidth: 200,
             background: 'var(--panel)',
             color: 'var(--text)',
             border: '1px solid var(--border)',
@@ -306,6 +315,24 @@ export function Quests() {
             fontSize: 14,
           }}
         />
+        <select
+          value={questSort}
+          onChange={(e) => setQuestSort(e.target.value as any)}
+          aria-label="Сортування квестів"
+          style={{
+            background: 'var(--panel)',
+            color: 'var(--text)',
+            border: '1px solid var(--border)',
+            borderRadius: 6,
+            padding: '8px 10px',
+            fontSize: 13,
+          }}
+        >
+          <option value="default">Сортування: стандартне</option>
+          <option value="xp-desc">За XP (від більших)</option>
+          <option value="xp-asc">За XP (від менших)</option>
+          <option value="difficulty">За складністю</option>
+        </select>
       </div>
 
       <div className="chips" style={{ marginBottom: 8, gap: 6 }}>
