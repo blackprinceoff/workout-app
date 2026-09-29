@@ -14,6 +14,7 @@ export function Library() {
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<QuestCategory | 'all' | 'favorites'>('all')
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all')
+  const [sortOption, setSortOption] = useState<'default' | 'xp-desc' | 'difficulty-asc' | 'title-asc'>('default')
   const [selectedTemplate, setSelectedTemplate] = useState<QuestTemplate | null>(null)
 
   const categories: { key: QuestCategory | 'all' | 'favorites'; label: string }[] = [
@@ -34,7 +35,7 @@ export function Library() {
   ]
 
   const filteredTemplates = useMemo(() => {
-    return QUEST_TEMPLATES.filter((t) => {
+    const list = QUEST_TEMPLATES.filter((t) => {
       if (selectedCategory === 'favorites') {
         if (!state.favoriteExerciseIds?.includes(t.id)) return false
       } else if (selectedCategory !== 'all' && t.category !== selectedCategory) {
@@ -49,7 +50,14 @@ export function Library() {
       }
       return true
     })
-  }, [selectedCategory, selectedMuscle, search, state.favoriteExerciseIds])
+
+    return list.sort((a, b) => {
+      if (sortOption === 'xp-desc') return b.baseXp - a.baseXp
+      if (sortOption === 'difficulty-asc') return a.difficulty - b.difficulty
+      if (sortOption === 'title-asc') return a.title.localeCompare(b.title, 'uk')
+      return 0
+    })
+  }, [selectedCategory, selectedMuscle, search, sortOption, state.favoriteExerciseIds])
 
   return (
     <>
@@ -80,6 +88,23 @@ export function Library() {
               }}
             />
           </div>
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value as any)}
+            style={{
+              padding: '8px 12px',
+              background: 'var(--surface-sub)',
+              border: '1px solid var(--border-solid)',
+              borderRadius: 8,
+              color: 'var(--text)',
+              fontSize: 14,
+            }}
+          >
+            <option value="default">Сортування: за замовчуванням</option>
+            <option value="xp-desc">За XP (найбільші)</option>
+            <option value="difficulty-asc">За складністю (легкі спочатку)</option>
+            <option value="title-asc">За назвою (А-Я)</option>
+          </select>
         </div>
 
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
