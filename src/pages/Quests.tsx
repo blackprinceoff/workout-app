@@ -485,6 +485,7 @@ export function Quests() {
 
       <BreakTimer />
       <ExerciseHoldTimer />
+      <WorkoutStopwatch />
 
       <div className="panel section-mt" style={{ padding: 12, marginTop: 16 }}>
         <div
@@ -967,6 +968,81 @@ function ExerciseHoldTimer() {
           Час вичерпано! Чудове утримання!
         </div>
       )}
+    </div>
+  )
+}
+
+function WorkoutStopwatch() {
+  const [seconds, setSeconds] = useState(0)
+  const [running, setRunning] = useState(false)
+
+  useEffect(() => {
+    if (!running) return
+
+    const id = setInterval(() => {
+      setSeconds((s) => s + 1)
+    }, 1000)
+
+    return () => clearInterval(id)
+  }, [running])
+
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const secs = seconds % 60
+
+  const timeStr = hours > 0
+    ? `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+    : `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+
+  return (
+    <div className="panel section-mb" style={{ marginTop: 16, padding: 12 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Timer size={20} color="var(--gold)" />
+          <div>
+            <div className="settings-label">Секундомір тренування</div>
+            <div className="settings-hint">Вимірюй тривалість поточної сесії</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 26,
+              color: 'var(--gold-bright)',
+              minWidth: 90,
+              textAlign: 'center',
+            }}
+          >
+            {timeStr}
+          </div>
+          <button
+            type="button"
+            className="btn btn-gold btn-sm"
+            onClick={() => setRunning((r) => !r)}
+          >
+            {running ? 'Пауза' : 'Старт'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() => {
+              setRunning(false)
+              setSeconds(0)
+            }}
+          >
+            Скинути
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
