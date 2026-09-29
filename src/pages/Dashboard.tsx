@@ -29,6 +29,9 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
   const mainTotal = todayQuests.filter((q) => q.main).length
   const totalDone = todayQuests.filter((q) => q.done).length
 
+  const todayXpSum = todayQuests.filter((q) => q.done).reduce((sum, q) => sum + q.xp, 0)
+  const todayCalories = Math.round(todayXpSum * 0.8)
+
   const mult = xpMultiplier(state.streak, state.habit)
   const companion = getCompanionInfo(state, todayQuests)
 
@@ -321,8 +324,12 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
               {totalDone}/{todayQuests.length}
             </div>
           </div>
-          <div style={{ color: 'var(--text-dim)', fontSize: 13, marginBottom: 14 }}>
+          <div style={{ color: 'var(--text-dim)', fontSize: 13, marginBottom: 10 }}>
             Основних виконано: {mainDone}/{mainTotal}. Виконай хоча б один, щоб серія не перервалась.
+          </div>
+          <div style={{ display: 'flex', gap: 16, fontSize: 13, color: 'var(--text-dim)', marginBottom: 14 }}>
+            <span>✨ XP сьогодні: <strong style={{ color: 'var(--gold-bright)' }}>{todayXpSum}</strong></span>
+            <span>⚡ Енергія: <strong style={{ color: 'var(--gold-bright)' }}>{todayCalories} ккал</strong></span>
           </div>
           <button className="btn btn-gold" onClick={() => onNavigate('quests')}>
             <ScrollText size={16} /> До квестів
