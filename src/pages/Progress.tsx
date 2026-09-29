@@ -47,6 +47,65 @@ export function Progress() {
   const days7 = useMemo(() => lastNDays(7, state.currentDate), [state.currentDate])
   const days35 = useMemo(() => lastNDays(35, state.currentDate), [state.currentDate])
 
+  const monthNamesUa = [
+    'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
+    'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
+  ]
+
+  const [selectedYear, setSelectedYear] = useState(() => Number(state.currentDate.split('-')[0]))
+  const [selectedMonth, setSelectedMonth] = useState(() => Number(state.currentDate.split('-')[1]))
+
+  const monthDays = useMemo(() => {
+    const days: { dateStr: string; dayNum: number; inMonth: boolean }[] = []
+    const firstDay = new Date(selectedYear, selectedMonth - 1, 1)
+    const lastDay = new Date(selectedYear, selectedMonth, 0)
+    let jsDay = firstDay.getDay()
+    let startOffset = jsDay === 0 ? 6 : jsDay - 1
+
+    for (let i = startOffset - 1; i >= 0; i--) {
+      const d = new Date(selectedYear, selectedMonth - 1, -i)
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      days.push({ dateStr: `${y}-${m}-${day}`, dayNum: d.getDate(), inMonth: false })
+    }
+
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      const mStr = String(selectedMonth).padStart(2, '0')
+      const dStr = String(d).padStart(2, '0')
+      days.push({ dateStr: `${selectedYear}-${mStr}-${dStr}`, dayNum: d, inMonth: true })
+    }
+
+    while (days.length % 7 !== 0) {
+      const nextDateNum = days.length - startOffset - lastDay.getDate() + 1
+      const d = new Date(selectedYear, selectedMonth, nextDateNum)
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      days.push({ dateStr: `${y}-${m}-${day}`, dayNum: d.getDate(), inMonth: false })
+    }
+
+    return days
+  }, [selectedYear, selectedMonth])
+
+  const handlePrevMonth = () => {
+    if (selectedMonth === 1) {
+      setSelectedYear(selectedYear - 1)
+      setSelectedMonth(12)
+    } else {
+      setSelectedMonth(selectedMonth - 1)
+    }
+  }
+
+  const handleNextMonth = () => {
+    if (selectedMonth === 12) {
+      setSelectedYear(selectedYear + 1)
+      setSelectedMonth(1)
+    } else {
+      setSelectedMonth(selectedMonth + 1)
+    }
+  }
+
   const doneCount = (key: string) => (state.questsByDate[key] ?? []).filter((q) => q.done).length
   const perfectDays = days14.filter((d) => {
     const qs = state.questsByDate[d] ?? []
@@ -240,6 +299,69 @@ export function Progress() {
           ) : (
             <>Переможних днів: {wonDays}/7</>
           )}
+        </div>
+      </div>
+
+      <div className="panel section-mb">
+        <div className="panel-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <CalendarDays size={16} /> Календар активності ({monthNamesUa[selectedMonth - 1]} {selectedYear})
+          </span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              className="btn"
+              style={{ padding: '2px 8px', fontSize: 12, background: 'var(--surface-raised)', color: 'var(--text)' }}
+              title="Попередній місяць"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const [y, m] = state.currentDate.split('-').map(Number)
+                setSelectedYear(y)
+                setSelectedMonth(m)
+              }}
+              className="btn"
+              style={{ padding: '2px 6px', fontSize: 11, background: 'var(--surface-raised)', color: 'var(--text-dim)' }}
+              title="Поточний місяць"
+            >
+              Сьогодні
+            </button>
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              className="btn"
+              style={{ padding: '2px 8px', fontSize: 12, background: 'var(--surface-raised)', color: 'var(--text)' }}
+              title="Наступний місяць"
+            >
+              ›
+            </button>
+          </div>
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 10 }}>
+          Календарна сітка місяця: інтенсивність виконання квестів за кожен день.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 6, textAlign: 'center', fontSize: 11, color: 'var(--text-dim)' }}>
+          <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Нд</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+          {monthDays.map(({ dateStr, dayNum, inMonth }) => {
+            const n = doneCount(dateStr)
+            const level = n === 0 ? 'l0' : n === 1 ? 'l1' : n === 2 ? 'l2' : n === 3 || n === 4 ? 'l3' : 'l4'
+            return (
+              <div
+                key={dateStr}
+                className={`heat-cell ${level} ${dateStr === state.currentDate ? 'today' : ''}`}
+                style={{ opacity: inMonth ? 1 : 0.4, fontSize: 11 }}
+                title={`${formatUa(dateStr)} · ${n} квестів`}
+              >
+                {dayNum}
+              </div>
+            )
+          })}
         </div>
       </div>
 
