@@ -180,6 +180,23 @@ export function Progress() {
     return { maxQuests: maxQ, maxXp: Math.floor(maxXp), activeDays }
   }, [state.questsByDate])
 
+  const exerciseStats = useMemo(() => {
+    const map: Record<string, { title: string; count: number; totalXp: number; category: string }> = {}
+    for (const quests of Object.values(state.questsByDate)) {
+      for (const q of quests) {
+        if (q.done) {
+          const key = q.templateId || q.title
+          if (!map[key]) {
+            map[key] = { title: q.title, count: 0, totalXp: 0, category: q.category }
+          }
+          map[key].count++
+          map[key].totalXp += q.xp
+        }
+      }
+    }
+    return Object.values(map).sort((a, b) => b.count - a.count || b.totalXp - a.totalXp).slice(0, 5)
+  }, [state.questsByDate])
+
   const weekdayStats = useMemo(() => {
     const counts = [0, 0, 0, 0, 0, 0, 0]
     const totals = [0, 0, 0, 0, 0, 0, 0]
@@ -493,6 +510,51 @@ export function Progress() {
             <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--gold-bright)' }}>{state.bestStreak} дн.</div>
           </div>
         </div>
+      </div>
+
+      <div className="panel section-mb">
+        <div className="panel-title">
+          <Medal size={16} /> Найчастіші вправи
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+          Топ вправ, які ти виконував найчастіше за весь час.
+        </p>
+        {exerciseStats.length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--text-dim)', textAlign: 'center', padding: '12px 0' }}>
+            Ще немає виконаних квестів. Почни тренування!
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: 8 }}>
+            {exerciseStats.map((ex, idx) => (
+              <div
+                key={ex.title}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '8px 12px',
+                  background: 'var(--panel-sub)',
+                  borderRadius: 6,
+                  fontSize: 13,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontWeight: 700, color: idx === 0 ? 'var(--gold-bright)' : 'var(--text-dim)', width: 20 }}>
+                    #{idx + 1}
+                  </span>
+                  <div>
+                    <div style={{ fontWeight: 600, color: 'var(--text)' }}>{ex.title}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>Категорія: {CATEGORY_LABELS[ex.category as keyof typeof CATEGORY_LABELS] || ex.category}</div>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 700, color: 'var(--gold)' }}>{ex.count} разів</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>+{Math.floor(ex.totalXp)} XP</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="panel section-mb">
