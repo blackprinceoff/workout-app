@@ -529,6 +529,54 @@ export function Progress() {
 
       <div className="panel section-mb">
         <div className="panel-title">
+          <Flame size={16} /> Віхи серії
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+          Прогрес розблокування ключових віх серії тренувань. Твій рекорд: <strong style={{ color: 'var(--gold)' }}>{state.bestStreak} дн.</strong>
+        </p>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {[
+            { days: 3, title: 'Караван не зупиняється', desc: 'Серія 3 дні' },
+            { days: 7, title: 'Тиждень воїна', desc: 'Серія 7 днів' },
+            { days: 14, title: 'Двічі по тижню', desc: 'Серія 14 днів' },
+            { days: 30, title: 'Місяць без пощади', desc: 'Серія 30 днів' },
+            { days: 66, title: 'Два місяці волі', desc: 'Серія 66 днів' },
+            { days: 100, title: 'Сотня', desc: 'Серія 100 днів' },
+          ].map((m) => {
+            const unlocked = state.bestStreak >= m.days
+            const pct = Math.min(100, Math.round((state.bestStreak / m.days) * 100))
+            return (
+              <div
+                key={m.days}
+                style={{
+                  background: unlocked ? 'var(--gold-dim-bg, rgba(236,200,120,0.12))' : 'var(--panel-sub)',
+                  border: unlocked ? '1px solid var(--gold)' : '1px solid var(--border-solid)',
+                  borderRadius: 6,
+                  padding: '8px 12px',
+                  fontSize: 13,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <span style={{ fontWeight: 600, color: unlocked ? 'var(--gold-bright)' : 'var(--text)' }}>
+                    {m.days} дн. — {m.title}
+                  </span>
+                  <span style={{ fontSize: 12, color: unlocked ? 'var(--good)' : 'var(--text-dim)' }}>
+                    {unlocked ? '✓ Досягнуто' : `${state.bestStreak}/${m.days} (${pct}%)`}
+                  </span>
+                </div>
+                {!unlocked && (
+                  <div className="bar" style={{ height: 4, borderRadius: 2, background: 'var(--surface-raised)', overflow: 'hidden' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: 'var(--gold)', borderRadius: 2 }} />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="panel section-mb">
+        <div className="panel-title">
           <Medal size={16} /> Найчастіші вправи
         </div>
         <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
