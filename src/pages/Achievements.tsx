@@ -41,6 +41,19 @@ export function Achievements() {
         Досягнень відкрито: {unlocked} з {ACHIEVEMENTS.length}
       </p>
 
+      <div className="panel section-mb" style={{ padding: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, fontSize: 13, fontWeight: 700 }}>
+          <span>Прогрес колекції трофеїв</span>
+          <span style={{ color: 'var(--gold-bright)' }}>{Math.round((unlocked / ACHIEVEMENTS.length) * 100)}%</span>
+        </div>
+        <div className="bar" style={{ height: 8, borderRadius: 4, background: 'var(--surface-raised)', overflow: 'hidden' }}>
+          <div
+            className="bar-fill gold"
+            style={{ width: `${(unlocked / ACHIEVEMENTS.length) * 100}%`, height: '100%' }}
+          />
+        </div>
+      </div>
+
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }} role="tablist" aria-label="Фільтр трофеїв">
         <button
           type="button"
