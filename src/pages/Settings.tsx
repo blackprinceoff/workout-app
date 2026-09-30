@@ -23,6 +23,7 @@ export function Settings() {
     removeWeight,
     toggleSound,
     toggleNotifications,
+    toggleTheme,
     setTargetWeight,
     setVolume,
     setWaterTargetGlasses,
@@ -378,6 +379,22 @@ export function Settings() {
             style={{ width: 80, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-solid)', background: 'var(--surface-sub)', color: 'var(--text)', fontSize: 14, textAlign: 'center' }}
             aria-label="Ціль води на день"
           />
+        </div>
+        <div className="settings-row" style={{ marginTop: 12, borderBottom: 'none' }}>
+          <div>
+            <div className="settings-label">Тема інтерфейсу</div>
+            <div className="settings-hint">
+              Поточна тема: {state.settings.theme === 'light' ? 'Світла (Light)' : 'Темна (Dark)'}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm"
+            style={{ background: 'var(--surface-sub)', color: 'var(--text)', border: '1px solid var(--border-solid)' }}
+            onClick={toggleTheme}
+          >
+            {state.settings.theme === 'light' ? '🌙 Темна' : '☀️ Світла'}
+          </button>
         </div>
       </div>
 
