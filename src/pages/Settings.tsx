@@ -19,6 +19,7 @@ export function Settings() {
     state,
     setName,
     updateProfile,
+    addWeight,
     removeWeight,
     toggleSound,
     toggleNotifications,
@@ -32,6 +33,19 @@ export function Settings() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [importError, setImportError] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
+  const [weightInput, setWeightInput] = useState(() => {
+    const todayEntry = state.weightHistory.find((w) => w.date === state.currentDate)
+    return String(todayEntry?.valueKg ?? state.weightHistory[state.weightHistory.length - 1]?.valueKg ?? state.profile.weightKg)
+  })
+
+  const handleSaveWeight = (e: React.FormEvent) => {
+    e.preventDefault()
+    const val = Number(weightInput)
+    if (Number.isFinite(val) && val > 0) {
+      addWeight(val)
+      updateProfile(state.profile.age, state.profile.heightCm, val)
+    }
+  }
 
   const recent = state.weightHistory.slice(-6).reverse()
 
@@ -169,6 +183,46 @@ export function Settings() {
             />
           </div>
         </div>
+
+        <form onSubmit={handleSaveWeight} style={{ marginTop: 16, marginBottom: 16, borderTop: '1px solid var(--border-solid)', paddingTop: 14 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>
+            Записати вагу на сьогодні ({formatUa(state.currentDate)})
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
+            <input
+              type="number"
+              step="0.1"
+              min="30"
+              max="400"
+              value={weightInput}
+              onChange={(e) => setWeightInput(e.target.value)}
+              style={{ width: 120, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-solid)', background: 'var(--surface-sub)', color: 'var(--text)', fontSize: 14 }}
+            />
+            <span style={{ fontSize: 13, color: 'var(--text-dim)' }}>кг</span>
+            <button type="submit" className="btn btn-gold btn-sm">
+              Зберегти вагу
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {[-0.5, -0.1, +0.1, +0.5].map((delta) => (
+              <button
+                key={delta}
+                type="button"
+                className="btn btn-sm"
+                style={{ background: 'var(--surface-sub)', color: 'var(--text)', border: '1px solid var(--border-solid)', fontSize: 12 }}
+                onClick={() => {
+                  const current = Number(weightInput) || state.profile.weightKg
+                  const nextVal = Math.round((current + delta) * 10) / 10
+                  setWeightInput(String(nextVal))
+                  addWeight(nextVal)
+                  updateProfile(state.profile.age, state.profile.heightCm, nextVal)
+                }}
+              >
+                {delta > 0 ? `+${delta}` : delta} кг
+              </button>
+            ))}
+          </div>
+        </form>
         {recent.length > 0 && (
           <>
             <div style={{ marginTop: 8, display: 'grid', gap: 6 }}>
