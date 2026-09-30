@@ -36,7 +36,7 @@ export function initialProfile(): PlayerProfile {
 }
 
 export function initialSettings(): GameSettings {
-  return { sound: true, notifications: false, theme: 'dark', volume: 0.8 }
+  return { sound: true, notifications: false, theme: 'dark', volume: 0.8, waterTargetGlasses: 8 }
 }
 
 export function createInitialState(): GameState {
@@ -155,6 +155,13 @@ function migrateRaw(raw: unknown): unknown {
   if (version < 14) {
     next.favoriteExerciseIds = []
   }
+  if (version < 15) {
+    const s = (next.settings ?? {}) as Record<string, unknown>
+    if (typeof s.waterTargetGlasses !== 'number') {
+      s.waterTargetGlasses = 8
+    }
+    next.settings = s
+  }
   return next
 }
 
@@ -195,6 +202,7 @@ export function normalizeState(raw: unknown): GameState | null {
           : base.settings.notifications,
       theme: r.settings?.theme === 'light' ? 'light' : 'dark',
       volume: typeof r.settings?.volume === 'number' && Number.isFinite(r.settings.volume) ? Math.max(0, Math.min(1, r.settings.volume)) : base.settings.volume,
+      waterTargetGlasses: typeof r.settings?.waterTargetGlasses === 'number' && Number.isFinite(r.settings.waterTargetGlasses) ? Math.max(2, Math.min(30, r.settings.waterTargetGlasses)) : base.settings.waterTargetGlasses,
     },
     questsByDate,
     unlockedAchievements:

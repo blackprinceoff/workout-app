@@ -67,6 +67,7 @@ export interface GameSettings {
   notifications: boolean
   theme: 'dark' | 'light'
   volume: number
+  waterTargetGlasses: number
 }
 
 export type GameEvent =

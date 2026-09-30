@@ -433,7 +433,7 @@ function Kpi({
 function WaterTracker() {
   const { state, setWater } = useGame()
   const waterCount = state.waterByDate[state.currentDate] ?? 0
-  const target = 8
+  const target = state.settings.waterTargetGlasses ?? 8
 
   return (
     <div className="panel section-mb" style={{ marginTop: 16, padding: 14 }}>
@@ -476,7 +476,7 @@ function WaterTracker() {
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
         <div className="settings-hint">
-          Ціль — 8 склянок (2 л) на день для підтримки тонусу та відновлення.
+          Ціль — {target} склянок ({Math.round(target * 0.25 * 10) / 10} л) на день для підтримки тонусу та відновлення.
         </div>
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           <button

@@ -23,9 +23,9 @@ export function Settings() {
     removeWeight,
     toggleSound,
     toggleNotifications,
-    toggleTheme,
     setTargetWeight,
     setVolume,
+    setWaterTargetGlasses,
     importState,
     resetGame,
     doExport,
@@ -366,15 +366,17 @@ export function Settings() {
         )}
         <div className="settings-row" style={{ marginTop: 12 }}>
           <div>
-            <div className="settings-label">Світла тема оформлення</div>
-            <div className="settings-hint">Перемикання між темною та світлою палітрою</div>
+            <div className="settings-label">Ціль води на день (склянок)</div>
+            <div className="settings-hint">Бажана кількість склянок (250 мл) щодня ({state.settings.waterTargetGlasses ?? 8} скл. / {Math.round((state.settings.waterTargetGlasses ?? 8) * 0.25 * 10) / 10} л)</div>
           </div>
-          <button
-            type="button"
-            className={`switch ${state.settings.theme === 'light' ? 'on' : ''}`}
-            onClick={toggleTheme}
-            aria-label="Перемкнути тему"
-            aria-pressed={state.settings.theme === 'light'}
+          <input
+            type="number"
+            min="2"
+            max="20"
+            value={state.settings.waterTargetGlasses ?? 8}
+            onChange={(e) => setWaterTargetGlasses(Number(e.target.value) || 8)}
+            style={{ width: 80, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-solid)', background: 'var(--surface-sub)', color: 'var(--text)', fontSize: 14, textAlign: 'center' }}
+            aria-label="Ціль води на день"
           />
         </div>
       </div>

@@ -60,6 +60,7 @@ type Action =
     | { type: 'SET_WATER'; count: number }
     | { type: 'SET_TARGET_WEIGHT'; weightKg: number }
     | { type: 'SET_VOLUME'; volume: number }
+    | { type: 'SET_WATER_TARGET_GLASSES'; target: number }
     | { type: 'ADD_BODY_MEASUREMENTS'; entry: Omit<BodyMeasurementEntry, 'date'> }
     | { type: 'REMOVE_BODY_MEASUREMENTS'; date: string }
     | { type: 'TOGGLE_FAVORITE_EXERCISE'; templateId: string }
@@ -355,6 +356,14 @@ export function reducer(state: GameState, action: Action): GameState {
           volume: Math.max(0, Math.min(1, action.volume)),
         },
       }
+    case 'SET_WATER_TARGET_GLASSES':
+      return {
+        ...state,
+        settings: {
+          ...state.settings,
+          waterTargetGlasses: Math.max(2, Math.min(30, action.target)),
+        },
+      }
     case 'COMPLETE_ONBOARDING':
       return { ...state, onboardingDone: true }
     case 'IMPORT_STATE':
@@ -446,9 +455,10 @@ interface GameContextValue {
   deleteCustomQuest: (questId: string) => void
    waterCount: number
    setWater: (count: number) => void
-   setTargetWeight: (weightKg: number) => void
-   setVolume: (volume: number) => void
-   addBodyMeasurements: (entry: Omit<BodyMeasurementEntry, 'date'>) => void
+    setTargetWeight: (weightKg: number) => void
+    setVolume: (volume: number) => void
+    setWaterTargetGlasses: (target: number) => void
+    addBodyMeasurements: (entry: Omit<BodyMeasurementEntry, 'date'>) => void
    removeBodyMeasurements: (date: string) => void
    toggleFavoriteExercise: (templateId: string) => void
   }
@@ -548,6 +558,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
        setWater: (count) => dispatch({ type: 'SET_WATER', count }),
        setTargetWeight: (weightKg) => dispatch({ type: 'SET_TARGET_WEIGHT', weightKg }),
        setVolume: (volume) => dispatch({ type: 'SET_VOLUME', volume }),
+       setWaterTargetGlasses: (target) => dispatch({ type: 'SET_WATER_TARGET_GLASSES', target }),
        addBodyMeasurements: (entry) => dispatch({ type: 'ADD_BODY_MEASUREMENTS', entry }),
        removeBodyMeasurements: (date) => dispatch({ type: 'REMOVE_BODY_MEASUREMENTS', date }),
        toggleFavoriteExercise: (templateId) => dispatch({ type: 'TOGGLE_FAVORITE_EXERCISE', templateId }),
