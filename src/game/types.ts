@@ -68,6 +68,7 @@ export interface GameSettings {
   theme: 'dark' | 'light'
   volume: number
   waterTargetGlasses: number
+  weeklyTargetDays: number
 }
 
 export type GameEvent =

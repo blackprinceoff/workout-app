@@ -27,6 +27,7 @@ export function Settings() {
     setTargetWeight,
     setVolume,
     setWaterTargetGlasses,
+    setWeeklyTargetDays,
     importState,
     resetGame,
     doExport,
@@ -378,6 +379,21 @@ export function Settings() {
             onChange={(e) => setWaterTargetGlasses(Number(e.target.value) || 8)}
             style={{ width: 80, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-solid)', background: 'var(--surface-sub)', color: 'var(--text)', fontSize: 14, textAlign: 'center' }}
             aria-label="Ціль води на день"
+          />
+        </div>
+        <div className="settings-row" style={{ marginTop: 12 }}>
+          <div>
+            <div className="settings-label">Тижнева мета тренувань (днів)</div>
+            <div className="settings-hint">Бажана кількість активних днів тренувань на тиждень</div>
+          </div>
+          <input
+            type="number"
+            min="1"
+            max="7"
+            value={state.settings.weeklyTargetDays ?? 4}
+            onChange={(e) => setWeeklyTargetDays(Number(e.target.value) || 4)}
+            style={{ width: 80, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-solid)', background: 'var(--surface-sub)', color: 'var(--text)', fontSize: 14, textAlign: 'center' }}
+            aria-label="Тижнева мета тренувань"
           />
         </div>
         <div className="settings-row" style={{ marginTop: 12, borderBottom: 'none' }}>

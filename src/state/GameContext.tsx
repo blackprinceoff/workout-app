@@ -64,6 +64,7 @@ type Action =
     | { type: 'ADD_BODY_MEASUREMENTS'; entry: Omit<BodyMeasurementEntry, 'date'> }
     | { type: 'REMOVE_BODY_MEASUREMENTS'; date: string }
     | { type: 'TOGGLE_FAVORITE_EXERCISE'; templateId: string }
+    | { type: 'SET_WEEKLY_TARGET_DAYS'; target: number }
 
 function unlockAchievements(
   state: GameState,
@@ -364,6 +365,14 @@ export function reducer(state: GameState, action: Action): GameState {
           waterTargetGlasses: Math.max(2, Math.min(30, action.target)),
         },
       }
+    case 'SET_WEEKLY_TARGET_DAYS':
+      return {
+        ...state,
+        settings: {
+          ...state.settings,
+          weeklyTargetDays: Math.max(1, Math.min(7, action.target)),
+        },
+      }
     case 'COMPLETE_ONBOARDING':
       return { ...state, onboardingDone: true }
     case 'IMPORT_STATE':
@@ -459,9 +468,10 @@ interface GameContextValue {
     setVolume: (volume: number) => void
     setWaterTargetGlasses: (target: number) => void
     addBodyMeasurements: (entry: Omit<BodyMeasurementEntry, 'date'>) => void
-   removeBodyMeasurements: (date: string) => void
-   toggleFavoriteExercise: (templateId: string) => void
-  }
+    removeBodyMeasurements: (date: string) => void
+    toggleFavoriteExercise: (templateId: string) => void
+    setWeeklyTargetDays: (target: number) => void
+   }
 
 const GameContext = createContext<GameContextValue | null>(null)
 
@@ -562,6 +572,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
        addBodyMeasurements: (entry) => dispatch({ type: 'ADD_BODY_MEASUREMENTS', entry }),
        removeBodyMeasurements: (date) => dispatch({ type: 'REMOVE_BODY_MEASUREMENTS', date }),
        toggleFavoriteExercise: (templateId) => dispatch({ type: 'TOGGLE_FAVORITE_EXERCISE', templateId }),
+       setWeeklyTargetDays: (target) => dispatch({ type: 'SET_WEEKLY_TARGET_DAYS', target }),
       }),
     [state, level, statsList, todayQuests],
   )

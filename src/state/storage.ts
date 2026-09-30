@@ -36,7 +36,7 @@ export function initialProfile(): PlayerProfile {
 }
 
 export function initialSettings(): GameSettings {
-  return { sound: true, notifications: false, theme: 'dark', volume: 0.8, waterTargetGlasses: 8 }
+  return { sound: true, notifications: false, theme: 'dark', volume: 0.8, waterTargetGlasses: 8, weeklyTargetDays: 4 }
 }
 
 export function createInitialState(): GameState {
@@ -162,6 +162,13 @@ function migrateRaw(raw: unknown): unknown {
     }
     next.settings = s
   }
+  if (version < 16) {
+    const s = (next.settings ?? {}) as Record<string, unknown>
+    if (typeof s.weeklyTargetDays !== 'number') {
+      s.weeklyTargetDays = 4
+    }
+    next.settings = s
+  }
   return next
 }
 
@@ -202,7 +209,8 @@ export function normalizeState(raw: unknown): GameState | null {
           : base.settings.notifications,
       theme: r.settings?.theme === 'light' ? 'light' : 'dark',
       volume: typeof r.settings?.volume === 'number' && Number.isFinite(r.settings.volume) ? Math.max(0, Math.min(1, r.settings.volume)) : base.settings.volume,
-      waterTargetGlasses: typeof r.settings?.waterTargetGlasses === 'number' && Number.isFinite(r.settings.waterTargetGlasses) ? Math.max(2, Math.min(30, r.settings.waterTargetGlasses)) : base.settings.waterTargetGlasses,
+       waterTargetGlasses: typeof r.settings?.waterTargetGlasses === 'number' && Number.isFinite(r.settings.waterTargetGlasses) ? Math.max(2, Math.min(30, r.settings.waterTargetGlasses)) : base.settings.waterTargetGlasses,
+       weeklyTargetDays: typeof r.settings?.weeklyTargetDays === 'number' && Number.isFinite(r.settings.weeklyTargetDays) ? Math.max(1, Math.min(7, r.settings.weeklyTargetDays)) : base.settings.weeklyTargetDays,
     },
     questsByDate,
     unlockedAchievements:

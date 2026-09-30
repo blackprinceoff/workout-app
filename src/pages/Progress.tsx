@@ -134,6 +134,13 @@ export function Progress() {
     return qs.length > 0 && qs.every((q) => q.done)
   }).length
 
+  const weeklyTarget = state.settings.weeklyTargetDays ?? 4
+  const activeDaysLast7 = days7.filter((d) => {
+    const qs = state.questsByDate[d] ?? []
+    return qs.some((q) => q.done)
+  }).length
+  const weeklyProgressPct = Math.min(100, Math.round((activeDaysLast7 / weeklyTarget) * 100))
+
   const muscleCounts = useMemo(() => {
     const counts: Record<string, number> = { push: 0, leg: 0, core: 0 }
     for (const quests of Object.values(state.questsByDate)) {
@@ -331,6 +338,32 @@ export function Progress() {
           ) : (
             <>Переможних днів: {wonDays}/7</>
           )}
+        </div>
+      </div>
+
+      <div className="panel section-mb">
+        <div className="panel-title">
+          <Flame size={16} /> Тижнева мета тренувань
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, fontSize: 13 }}>
+          <span style={{ color: 'var(--text-dim)' }}>Активних днів за останні 7 днів:</span>
+          <span style={{ fontWeight: 600, color: 'var(--gold)' }}>{activeDaysLast7} / {weeklyTarget} днів</span>
+        </div>
+        <div className="progress-track" style={{ height: 8, background: 'var(--surface-raised)', borderRadius: 4, overflow: 'hidden' }}>
+          <div
+            className="progress-fill"
+            style={{
+              width: `${weeklyProgressPct}%`,
+              height: '100%',
+              background: activeDaysLast7 >= weeklyTarget ? 'var(--good)' : 'var(--gold)',
+              transition: 'width 0.3s ease',
+            }}
+          />
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 8 }}>
+          {activeDaysLast7 >= weeklyTarget
+            ? '🎉 Вітаємо! Тижневу мету тренувань досягнуто!'
+            : `Ще ${Math.max(0, weeklyTarget - activeDaysLast7)} днів до виконання тижневої мети.`}
         </div>
       </div>
 
