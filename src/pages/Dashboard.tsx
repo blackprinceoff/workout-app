@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGame } from '../state/GameContext'
+import { playAchievement } from '../utils/sound'
 import { CLASS_BY_LEVEL, CATEGORY_LABELS, HABIT_DAY_GAIN, STAT_LABELS } from '../game/constants'
 import { lastNDays, shiftDateKey, weekdayShort } from '../game/dates'
 import { xpMultiplier } from '../game/leveling'
@@ -435,6 +436,14 @@ function WaterTracker() {
   const waterCount = state.waterByDate[state.currentDate] ?? 0
   const target = state.settings.waterTargetGlasses ?? 8
 
+  const updateWaterCount = (newCount: number) => {
+    const clamped = Math.max(0, Math.min(30, newCount))
+    if (waterCount < target && clamped >= target && state.settings.sound) {
+      void playAchievement()
+    }
+    setWater(clamped)
+  }
+
   return (
     <div className="panel section-mb" style={{ marginTop: 16, padding: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -445,14 +454,19 @@ function WaterTracker() {
           {waterCount} / {target} склянок ({Math.round(waterCount * 0.25 * 10) / 10} л)
         </div>
       </div>
+      {waterCount >= target && (
+        <div style={{ marginBottom: 10, padding: '6px 10px', borderRadius: 6, background: 'rgba(234, 179, 8, 0.15)', border: '1px solid var(--gold)', fontSize: 12, color: 'var(--gold-bright)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span>✨ Ціль гідратації на сьогодні досягнуто! Чудова робота!</span>
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-        {Array.from({ length: target }).map((_, i) => {
+        {Array.from({ length: Math.max(target, waterCount) }).map((_, i) => {
           const filled = i < waterCount
           return (
             <button
               key={i}
               type="button"
-              onClick={() => setWater(filled ? i : i + 1)}
+              onClick={() => updateWaterCount(filled ? i : i + 1)}
               title={`Склянка ${i + 1} (250 мл)`}
               style={{
                 width: 32,
@@ -482,7 +496,7 @@ function WaterTracker() {
           <button
             type="button"
             className="btn btn-sm"
-            onClick={() => setWater(Math.max(0, waterCount - 1))}
+            onClick={() => updateWaterCount(Math.max(0, waterCount - 1))}
             disabled={waterCount <= 0}
             style={{ padding: '2px 6px', fontSize: 11, background: 'var(--surface-raised)', color: 'var(--text)', border: '1px solid var(--border-solid)' }}
             title="Зменшити на 1 склянку"
@@ -492,7 +506,7 @@ function WaterTracker() {
           <button
             type="button"
             className="btn btn-sm"
-            onClick={() => setWater(waterCount + 1)}
+            onClick={() => updateWaterCount(waterCount + 1)}
             style={{ padding: '2px 6px', fontSize: 11, background: 'var(--surface-raised)', color: 'var(--text)', border: '1px solid var(--border-solid)' }}
             title="+250 мл (1 склянка)"
           >
@@ -501,7 +515,7 @@ function WaterTracker() {
           <button
             type="button"
             className="btn btn-sm btn-gold"
-            onClick={() => setWater(waterCount + 2)}
+            onClick={() => updateWaterCount(waterCount + 2)}
             style={{ padding: '2px 6px', fontSize: 11 }}
             title="+500 мл (2 склянки)"
           >
@@ -510,7 +524,7 @@ function WaterTracker() {
           <button
             type="button"
             className="btn btn-sm"
-            onClick={() => setWater(waterCount + 4)}
+            onClick={() => updateWaterCount(waterCount + 4)}
             style={{ padding: '2px 6px', fontSize: 11, background: 'var(--surface-raised)', color: 'var(--text)', border: '1px solid var(--border-solid)' }}
             title="+1000 мл (4 склянки)"
           >
