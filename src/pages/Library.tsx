@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { useGame } from '../state/GameContext'
 import { QUEST_TEMPLATES } from '../game/quests'
 import { levelInfo } from '../game/leveling'
@@ -12,20 +12,33 @@ export function Library() {
   const currentLevel = levelInfo(state.totalXp).level
 
   const [search, setSearch] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<QuestCategory | 'all' | 'favorites'>('all')
+  const [selectedCategory, setSelectedCategory] = useState<QuestCategory | 'all' | 'favorites' | 'completed'>('all')
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all')
   const [sortOption, setSortOption] = useState<'default' | 'xp-desc' | 'difficulty-asc' | 'title-asc'>('default')
   const [selectedTemplate, setSelectedTemplate] = useState<QuestTemplate | null>(null)
 
-  const categories: { key: QuestCategory | 'all' | 'favorites'; label: string }[] = [
+  const categories: { key: QuestCategory | 'all' | 'favorites' | 'completed'; label: string }[] = [
     { key: 'all', label: 'Усі' },
     { key: 'favorites', label: '⭐ Улюблені' },
+    { key: 'completed', label: '🏆 Виконувані' },
     { key: 'strength', label: CATEGORY_LABELS.strength },
     { key: 'core', label: CATEGORY_LABELS.core },
     { key: 'cardio', label: CATEGORY_LABELS.cardio },
     { key: 'mobility', label: CATEGORY_LABELS.mobility },
     { key: 'break', label: CATEGORY_LABELS.break },
   ]
+
+  const completionCountFor = useCallback((templateId: string) => {
+    let count = 0
+    for (const quests of Object.values(state.questsByDate)) {
+      for (const q of quests) {
+        if (q.templateId === templateId && q.done) {
+          count++
+        }
+      }
+    }
+    return count
+  }, [state.questsByDate])
 
   const muscleFilters: { key: MuscleGroup | 'all'; label: string }[] = [
     { key: 'all', label: 'Усі групи м\'язів' },
@@ -38,6 +51,8 @@ export function Library() {
     const list = QUEST_TEMPLATES.filter((t) => {
       if (selectedCategory === 'favorites') {
         if (!state.favoriteExerciseIds?.includes(t.id)) return false
+      } else if (selectedCategory === 'completed') {
+        if (completionCountFor(t.id) === 0) return false
       } else if (selectedCategory !== 'all' && t.category !== selectedCategory) {
         return false
       }
@@ -57,7 +72,7 @@ export function Library() {
       if (sortOption === 'title-asc') return a.title.localeCompare(b.title, 'uk')
       return 0
     })
-  }, [selectedCategory, selectedMuscle, search, sortOption, state.favoriteExerciseIds])
+  }, [selectedCategory, selectedMuscle, search, sortOption, state.favoriteExerciseIds, completionCountFor])
 
   return (
     <>
@@ -149,6 +164,7 @@ export function Library() {
           const unlockedVariants = t.variants?.filter((v) => v.minLevel <= currentLevel) ?? []
           const isUnlocked = !t.minLevel || t.minLevel <= currentLevel
           const isFav = state.favoriteExerciseIds?.includes(t.id)
+          const compCount = completionCountFor(t.id)
 
           return (
             <div
@@ -180,6 +196,11 @@ export function Library() {
                     )}
                   </div>
                   <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', margin: 0 }}>{t.title}</h3>
+                  {compCount > 0 && (
+                    <div style={{ fontSize: 11, background: 'rgba(236, 200, 120, 0.15)', color: 'var(--gold-bright)', padding: '2px 6px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                      🏆 Виконано: {compCount} раз(ів)
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <button
