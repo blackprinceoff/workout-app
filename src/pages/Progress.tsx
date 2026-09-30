@@ -43,6 +43,21 @@ export function Progress() {
     setThighsInput('')
   }
 
+  const exportBodyMeasurementsCsv = () => {
+    if (!state.bodyMeasurements.length) return
+    const rows = ['Дата,Груди (см),Талія (см),Стегна (см),Руки (см),Ноги (см)']
+    for (const m of state.bodyMeasurements) {
+      rows.push(`${m.date},${m.chest ?? ''},${m.waist ?? ''},${m.hips ?? ''},${m.arms ?? ''},${m.thighs ?? ''}`)
+    }
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'fitquest-body-measurements.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const days14 = useMemo(() => lastNDays(14, state.currentDate), [state.currentDate])
   const days7 = useMemo(() => lastNDays(7, state.currentDate), [state.currentDate])
   const days35 = useMemo(() => lastNDays(35, state.currentDate), [state.currentDate])
@@ -817,31 +832,43 @@ export function Progress() {
         </form>
 
         {state.bodyMeasurements.length > 0 ? (
-          <div style={{ display: 'grid', gap: 8, maxHeight: 250, overflowY: 'auto' }}>
-            {state.bodyMeasurements.slice(-10).reverse().map((m) => (
-              <div key={m.date} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--panel-sub)', padding: '8px 12px', borderRadius: 6, fontSize: 13 }}>
-                <div>
-                  <div style={{ color: 'var(--gold)', fontWeight: 600, marginBottom: 2 }}>{formatUa(m.date)}</div>
-                  <div style={{ color: 'var(--text-dim)', fontSize: 12, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    {m.chest !== undefined && <span>Груди: <strong style={{ color: 'var(--text)' }}>{m.chest}</strong> см</span>}
-                    {m.waist !== undefined && <span>Талія: <strong style={{ color: 'var(--text)' }}>{m.waist}</strong> см</span>}
-                    {m.hips !== undefined && <span>Стегна: <strong style={{ color: 'var(--text)' }}>{m.hips}</strong> см</span>}
-                    {m.arms !== undefined && <span>Руки: <strong style={{ color: 'var(--text)' }}>{m.arms}</strong> см</span>}
-                    {m.thighs !== undefined && <span>Ноги: <strong style={{ color: 'var(--text)' }}>{m.thighs}</strong> см</span>}
+          <>
+            <div style={{ display: 'grid', gap: 8, maxHeight: 250, overflowY: 'auto' }}>
+              {state.bodyMeasurements.slice(-10).reverse().map((m) => (
+                <div key={m.date} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--panel-sub)', padding: '8px 12px', borderRadius: 6, fontSize: 13 }}>
+                  <div>
+                    <div style={{ color: 'var(--gold)', fontWeight: 600, marginBottom: 2 }}>{formatUa(m.date)}</div>
+                    <div style={{ color: 'var(--text-dim)', fontSize: 12, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      {m.chest !== undefined && <span>Груди: <strong style={{ color: 'var(--text)' }}>{m.chest}</strong> см</span>}
+                      {m.waist !== undefined && <span>Талія: <strong style={{ color: 'var(--text)' }}>{m.waist}</strong> см</span>}
+                      {m.hips !== undefined && <span>Стегна: <strong style={{ color: 'var(--text)' }}>{m.hips}</strong> см</span>}
+                      {m.arms !== undefined && <span>Руки: <strong style={{ color: 'var(--text)' }}>{m.arms}</strong> см</span>}
+                      {m.thighs !== undefined && <span>Ноги: <strong style={{ color: 'var(--text)' }}>{m.thighs}</strong> см</span>}
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => removeBodyMeasurements(m.date)}
+                    className="btn"
+                    style={{ background: 'transparent', color: 'var(--danger)', fontSize: 11, padding: '2px 6px' }}
+                    title="Видалити заміри"
+                  >
+                    ✕
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => removeBodyMeasurements(m.date)}
-                  className="btn"
-                  style={{ background: 'transparent', color: 'var(--danger)', fontSize: 11, padding: '2px 6px' }}
-                  title="Видалити заміри"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                className="btn btn-sm"
+                style={{ background: 'transparent', border: '1px solid var(--border-solid)', color: 'var(--text)' }}
+                onClick={exportBodyMeasurementsCsv}
+              >
+                Експорт замірів тіла у CSV
+              </button>
+            </div>
+          </>
         ) : (
           <div style={{ fontSize: 13, color: 'var(--text-dim)', fontStyle: 'italic' }}>
             Ще немає збережених замірів. Введи показники вище та натисни зберегти.
