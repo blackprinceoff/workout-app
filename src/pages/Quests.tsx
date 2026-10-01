@@ -568,6 +568,48 @@ export function Quests() {
                 </button>
               ))}
             </div>
+            <div className="settings-label" style={{ fontSize: 13, marginTop: 6 }}>Готові комплекси тренувань (Рутини)</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
+              {[
+                {
+                  name: '⚡ Силовий комплекс',
+                  quests: [
+                    { title: '💪 Віджимання від підлоги', category: 'strength' as QuestCategory, xp: 20, stat: 'strength' as StatKey },
+                    { title: '🦵 Глибокі присідання', category: 'strength' as QuestCategory, xp: 15, stat: 'strength' as StatKey },
+                    { title: '🧱 Планка класична', category: 'core' as QuestCategory, xp: 15, stat: 'endurance' as StatKey },
+                  ],
+                },
+                {
+                  name: '🔥 Прес та кор',
+                  quests: [
+                    { title: '🧱 Планка класична', category: 'core' as QuestCategory, xp: 15, stat: 'endurance' as StatKey },
+                    { title: '🔄 Скручування на прес', category: 'core' as QuestCategory, xp: 15, stat: 'strength' as StatKey },
+                  ],
+                },
+                {
+                  name: '🧘 Мобільність',
+                  quests: [
+                    { title: '🧘 Ранкова розтяжка', category: 'mobility' as QuestCategory, xp: 15, stat: 'agility' as StatKey },
+                    { title: '🤸 Обертання суглобів', category: 'mobility' as QuestCategory, xp: 10, stat: 'agility' as StatKey },
+                  ],
+                },
+              ].map((routine) => (
+                <button
+                  key={routine.name}
+                  type="button"
+                  className="btn btn-sm"
+                  style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-solid)', color: 'var(--text)', fontSize: 12 }}
+                  onClick={() => {
+                    for (const q of routine.quests) {
+                      addCustomQuest(q.title, q.category, q.xp, q.stat)
+                    }
+                    setShowAddCustom(false)
+                  }}
+                >
+                  + {routine.name} ({routine.quests.length} впр.)
+                </button>
+              ))}
+            </div>
             <div className="settings-label" style={{ fontSize: 13, marginTop: 4 }}>Або створити власний квест вручну</div>
             <div className="field">
               <input
