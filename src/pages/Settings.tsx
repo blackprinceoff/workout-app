@@ -56,17 +56,46 @@ export function Settings() {
   const score = powerScore(state)
   const [copiedSummary, setCopiedSummary] = useState(false)
 
-  const handleCopySummary = () => {
-    const summary = [
+  const getSummaryText = () => {
+    return [
       `⚔️ FitQuest: ${state.profile.name} (${level.className}) — Рівень ${level.level}`,
       `🔥 Серія: ${state.streak} дн. (рекорд ${state.bestStreak})`,
       `🛡️ Звичка: ${Math.round(state.habit)}/100 · Загалом XP: ${Math.floor(state.totalXp)}`,
       `💪 Сила персонажа: ${score} · Квестів виконано: ${state.totalQuestsDone}`,
       ` «Шлях від дивана до легенди»`,
     ].join('\n')
-    navigator.clipboard.writeText(summary)
+  }
+
+  const handleCopySummary = () => {
+    navigator.clipboard.writeText(getSummaryText())
     setCopiedSummary(true)
     window.setTimeout(() => setCopiedSummary(false), 2000)
+  }
+
+  const handleShareTelegram = () => {
+    const text = encodeURIComponent(getSummaryText())
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${text}`, '_blank')
+  }
+
+  const handleShareTwitter = () => {
+    const text = encodeURIComponent(getSummaryText())
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank')
+  }
+
+  const handleWebShare = async () => {
+    const text = getSummaryText()
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'FitQuest — Звіт Героя',
+          text,
+        })
+        return
+      } catch {
+        // cancelled
+      }
+    }
+    handleCopySummary()
   }
 
   const exportWeightCsv = () => {
@@ -328,19 +357,32 @@ export function Settings() {
         <div className="panel-title">
           <Award size={16} /> Поділитися прогресом
         </div>
-        <div className="settings-row" style={{ borderBottom: 'none' }}>
+        <div className="settings-row" style={{ borderBottom: 'none', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
           <div>
-            <div className="settings-label">Звіт персонажа</div>
-            <div className="settings-hint">Скопіювати текстовий підсумок для щоденника чи друзів</div>
+            <div className="settings-label">Звіт персонажа та соцмережі</div>
+            <div className="settings-hint">Поділіться досягненнями у Telegram, X (Twitter) або скопіюйте у буфер обміну</div>
             {copiedSummary && (
               <div style={{ color: 'var(--good)', fontSize: 12, marginTop: 4 }}>
                 Звіт скопійовано у буфер обміну! 📋
               </div>
             )}
           </div>
-          <button className="btn btn-gold btn-sm" onClick={handleCopySummary}>
-            <Award size={14} /> Скопіювати звіт
-          </button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button className="btn btn-gold btn-sm" onClick={handleCopySummary}>
+              <Award size={14} /> Скопіювати звіт
+            </button>
+            <button className="btn btn-sm" style={{ background: 'var(--surface-sub)', border: '1px solid var(--border-solid)', color: 'var(--text)' }} onClick={handleShareTelegram}>
+              💬 Telegram
+            </button>
+            <button className="btn btn-sm" style={{ background: 'var(--surface-sub)', border: '1px solid var(--border-solid)', color: 'var(--text)' }} onClick={handleShareTwitter}>
+              🐦 Twitter (X)
+            </button>
+            {typeof navigator !== 'undefined' && 'share' in navigator && (
+              <button className="btn btn-sm" style={{ background: 'var(--surface-sub)', border: '1px solid var(--border-solid)', color: 'var(--text)' }} onClick={handleWebShare}>
+                🔗 Поділитись...
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
