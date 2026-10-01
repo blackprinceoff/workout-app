@@ -246,6 +246,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
       <DailyQuote />
       <WeeklyBossWidget onNavigate={onNavigate} />
       <DailyNoteWidget />
+      <QuickWeightWidget />
 
       <div className="panel section-mb" style={{ marginTop: 16 }}>
         <div className="panel-title">
@@ -667,6 +668,79 @@ function DailyNoteWidget() {
           <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>Записується до історії прогресу</span>
           <button type="submit" className="btn btn-sm btn-gold" style={{ padding: '4px 12px' }}>
             Зберегти нотатку
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+function QuickWeightWidget() {
+  const { state, addWeight, updateProfile } = useGame()
+  const todayEntry = state.weightHistory.find((w) => w.date === state.currentDate)
+  const latestWeight = todayEntry?.valueKg ?? state.weightHistory[state.weightHistory.length - 1]?.valueKg ?? state.profile.weightKg
+  const [val, setVal] = useState(String(latestWeight))
+  const [saved, setSaved] = useState(false)
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault()
+    const num = Number(val)
+    if (Number.isFinite(num) && num > 0 && num <= 500) {
+      addWeight(num)
+      updateProfile(state.profile.age, state.profile.heightCm, num)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    }
+  }
+
+  const adjust = (delta: number) => {
+    const current = Number(val) || latestWeight
+    const next = Math.round((current + delta) * 10) / 10
+    setVal(String(next))
+    addWeight(next)
+    updateProfile(state.profile.age, state.profile.heightCm, next)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  return (
+    <div className="panel section-mb" style={{ marginTop: 16, padding: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
+          <TrendingUp size={16} color="var(--gold)" />
+          <span>Швидкий облік ваги</span>
+        </div>
+        {saved && <span style={{ fontSize: 12, color: 'var(--good)', fontWeight: 600 }}>Збережено!</span>}
+      </div>
+      <form onSubmit={handleSave} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <input
+          type="number"
+          step="0.1"
+          min="20"
+          max="300"
+          value={val}
+          onChange={(e) => setVal(e.target.value)}
+          style={{
+            width: 100,
+            padding: '6px 10px',
+            borderRadius: 6,
+            background: 'var(--surface-raised)',
+            border: '1px solid var(--border-solid)',
+            color: 'var(--text)',
+            fontSize: 14,
+            fontWeight: 700,
+          }}
+        />
+        <span style={{ fontSize: 13, color: 'var(--text-dim)' }}>кг</span>
+        <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
+          <button type="button" className="btn btn-sm" onClick={() => adjust(-0.5)} title="Зменшити на 0.5 кг" style={{ padding: '4px 8px', fontSize: 12, background: 'var(--surface-raised)', color: 'var(--text)', border: '1px solid var(--border-solid)' }}>
+            -0.5
+          </button>
+          <button type="button" className="btn btn-sm" onClick={() => adjust(0.5)} title="Збільшити на 0.5 кг" style={{ padding: '4px 8px', fontSize: 12, background: 'var(--surface-raised)', color: 'var(--text)', border: '1px solid var(--border-solid)' }}>
+            +0.5
+          </button>
+          <button type="submit" className="btn btn-sm btn-gold" style={{ padding: '4px 12px' }}>
+            Зберегти
           </button>
         </div>
       </form>
