@@ -159,6 +159,8 @@ export function Library() {
         </div>
       </div>
 
+      <StrengthCalculator />
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
         {filteredTemplates.map((t) => {
           const unlockedVariants = t.variants?.filter((v) => v.minLevel <= currentLevel) ?? []
@@ -561,6 +563,70 @@ function ExerciseDetailModal({
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function StrengthCalculator() {
+  const [weight, setWeight] = useState('60')
+  const [reps, setReps] = useState('5')
+
+  const wNum = Number(weight) || 0
+  const rNum = Number(reps) || 1
+  const oneRm = wNum > 0 && rNum > 0 ? Math.round(wNum * (1 + Math.min(rNum, 30) / 30) * 10) / 10 : 0
+
+  return (
+    <div className="panel section-mb" style={{ padding: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text)', marginBottom: 8 }}>
+        <Dumbbell size={16} color="var(--gold)" />
+        <span>Калькулятор макс. ваги (1RM Estimator)</span>
+      </div>
+      <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+        Розрахунок максимальної ваги на 1 повторення (формула Еплі) та тренувальних зон.
+      </p>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <label style={{ fontSize: 12, color: 'var(--text-dim)' }}>Вага (кг):</label>
+          <input
+            type="number"
+            min="1"
+            max="500"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+            style={{ width: 80, padding: '6px 8px', borderRadius: 6, background: 'var(--surface-sub)', border: '1px solid var(--border-solid)', color: 'var(--text)', fontSize: 13 }}
+          />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <label style={{ fontSize: 12, color: 'var(--text-dim)' }}>Повторень:</label>
+          <input
+            type="number"
+            min="1"
+            max="30"
+            value={reps}
+            onChange={(e) => setReps(e.target.value)}
+            style={{ width: 70, padding: '6px 8px', borderRadius: 6, background: 'var(--surface-sub)', border: '1px solid var(--border-solid)', color: 'var(--text)', fontSize: 13 }}
+          />
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--gold-bright)', marginLeft: 'auto' }}>
+          Оцінка 1RM: {oneRm} кг
+        </div>
+      </div>
+      {oneRm > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, textAlign: 'center', fontSize: 12 }}>
+          <div style={{ background: 'var(--surface-sub)', padding: '6px 8px', borderRadius: 6 }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 10 }}>Сила (90%)</div>
+            <strong style={{ color: 'var(--gold)' }}>{Math.round(oneRm * 0.9 * 10) / 10} кг</strong>
+          </div>
+          <div style={{ background: 'var(--surface-sub)', padding: '6px 8px', borderRadius: 6 }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 10 }}>Гіпертрофія (80%)</div>
+            <strong style={{ color: 'var(--gold)' }}>{Math.round(oneRm * 0.8 * 10) / 10} кг</strong>
+          </div>
+          <div style={{ background: 'var(--surface-sub)', padding: '6px 8px', borderRadius: 6 }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 10 }}>Витривалість (70%)</div>
+            <strong style={{ color: 'var(--gold)' }}>{Math.round(oneRm * 0.7 * 10) / 10} кг</strong>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
