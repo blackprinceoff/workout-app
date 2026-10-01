@@ -31,6 +31,7 @@ export function Settings() {
     importState,
     resetGame,
     doExport,
+    statsList,
   } = useGame()
   const fileRef = useRef<HTMLInputElement>(null)
   const [importError, setImportError] = useState(false)
@@ -79,6 +80,42 @@ export function Settings() {
     const a = document.createElement('a')
     a.href = url
     a.download = 'fitquest-weight-history.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const exportMarkdownReport = () => {
+    const levelInfoObj = levelInfo(state.totalXp)
+    const score = powerScore(state)
+    const md = [
+      `# ⚔️ FitQuest — Звіт Героя: ${state.profile.name}`,
+      ``,
+      `## 🛡️ Основні показники`,
+      `- **Клас**: ${levelInfoObj.className} (Рівень ${levelInfoObj.level})`,
+      `- **Загалом XP**: ${Math.floor(state.totalXp)}`,
+      `- **Серія**: ${state.streak} дн. (рекорд: ${state.bestStreak} дн.)`,
+      `- **Дисципліна**: ${Math.round(state.habit)}/100`,
+      `- **Сила персонажа**: ${score}`,
+      `- **Виконано квестів**: ${state.totalQuestsDone}`,
+      `- **Днів у шляху**: ${state.daysCounted}`,
+      ``,
+      `## 📊 Характеристики`,
+      ...statsList.map((s) => `- **${s.key}**: ${s.value}`),
+      ``,
+      `## ⚖️ Вага та тіло`,
+      `- Поточна вага: ${state.profile.weightKg} кг (ціль: ${state.profile.targetWeightKg} кг)`,
+      `- Записів ваги: ${state.weightHistory.length}`,
+      `- Записів обхватів: ${state.bodyMeasurements.length}`,
+      ``,
+      `---`,
+      `*Згенеровано у FitQuest — Шлях від дивана до легенди*`,
+    ].join('\n')
+
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `fitquest-hero-report-${state.currentDate}.md`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -426,6 +463,21 @@ export function Settings() {
           </div>
           <button className="btn btn-gold btn-sm" onClick={doExport}>
             <Download size={14} /> Експорт
+          </button>
+        </div>
+
+        <div className="settings-row">
+          <div>
+            <div className="settings-label">Експорт звіту у Markdown</div>
+            <div className="settings-hint">Згенерувати текстовий звіт про героя та прогрес</div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm"
+            style={{ background: 'var(--surface-sub)', border: '1px solid var(--border-solid)', color: 'var(--text)' }}
+            onClick={exportMarkdownReport}
+          >
+            <Download size={14} /> Markdown
           </button>
         </div>
 
