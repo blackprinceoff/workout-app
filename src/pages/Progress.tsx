@@ -58,6 +58,18 @@ export function Progress() {
     URL.revokeObjectURL(url)
   }
 
+  const exportNotesTxt = () => {
+    if (!allNotes.length) return
+    const content = allNotes.map(([date, text]) => `--- ${formatUa(date)} (${date}) ---\n${text}\n`).join('\n')
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `fitquest-daily-notes-${state.currentDate}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const days14 = useMemo(() => lastNDays(14, state.currentDate), [state.currentDate])
   const days7 = useMemo(() => lastNDays(7, state.currentDate), [state.currentDate])
   const days35 = useMemo(() => lastNDays(35, state.currentDate), [state.currentDate])
@@ -987,14 +999,26 @@ export function Progress() {
               Нічого не знайдено за запитом "{noteSearch}".
             </div>
           ) : (
-            <div style={{ display: 'grid', gap: 10, maxHeight: 350, overflowY: 'auto' }}>
-              {filteredNotes.map(([date, text]) => (
-                <div key={date} style={{ background: 'var(--panel-sub)', padding: '10px 12px', borderRadius: 6, fontSize: 13 }}>
-                  <div style={{ color: 'var(--gold)', fontWeight: 600, marginBottom: 4 }}>{formatUa(date)}</div>
-                  <div style={{ color: 'var(--text)', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{text}</div>
-                </div>
-              ))}
-            </div>
+            <>
+              <div style={{ display: 'grid', gap: 10, maxHeight: 350, overflowY: 'auto' }}>
+                {filteredNotes.map(([date, text]) => (
+                  <div key={date} style={{ background: 'var(--panel-sub)', padding: '10px 12px', borderRadius: 6, fontSize: 13 }}>
+                    <div style={{ color: 'var(--gold)', fontWeight: 600, marginBottom: 4 }}>{formatUa(date)}</div>
+                    <div style={{ color: 'var(--text)', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{text}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  style={{ background: 'transparent', border: '1px solid var(--border-solid)', color: 'var(--text)' }}
+                  onClick={exportNotesTxt}
+                >
+                  Експорт нотаток у TXT
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}
