@@ -85,6 +85,27 @@ export function Progress() {
     URL.revokeObjectURL(url)
   }
 
+  const exportQuestsCsv = () => {
+    const rows = ['Дата,Назва квесту,Категорія,XP,Статус']
+    for (const [dateStr, quests] of Object.entries(state.questsByDate)) {
+      for (const q of quests) {
+        const title = `"${(q.title || '').replace(/"/g, '""')}"`
+        const category = q.category || ''
+        const xp = q.xp || 0
+        const status = q.done ? 'Виконано' : 'Активний'
+        rows.push(`${dateStr},${title},${category},${xp},${status}`)
+      }
+    }
+    if (rows.length <= 1) return
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'fitquest-quests-history.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const days14 = useMemo(() => lastNDays(14, state.currentDate), [state.currentDate])
   const days7 = useMemo(() => lastNDays(7, state.currentDate), [state.currentDate])
   const days30 = useMemo(() => lastNDays(30, state.currentDate), [state.currentDate])
@@ -1160,7 +1181,7 @@ export function Progress() {
         <div className="panel-title">
           <Medal size={16} /> Підсумки
         </div>
-        <div style={{ fontSize: 14, lineHeight: 1.9, color: 'var(--text-dim)' }}>
+        <div style={{ fontSize: 14, lineHeight: 1.9, color: 'var(--text-dim)', marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <CalendarDays size={15} color="var(--gold-dim)" /> Днів на шляху: <strong>{state.daysCounted}</strong>
           </div>
@@ -1176,6 +1197,16 @@ export function Progress() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Flame size={15} color="var(--gold-dim)" /> Поточна серія: <strong>{state.streak}</strong>
           </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border-solid)', paddingTop: 10 }}>
+          <button
+            type="button"
+            className="btn btn-sm"
+            style={{ background: 'transparent', border: '1px solid var(--border-solid)', color: 'var(--text)' }}
+            onClick={exportQuestsCsv}
+          >
+            Експорт історії квестів у CSV
+          </button>
         </div>
       </div>
     </>
