@@ -58,6 +58,21 @@ export function Progress() {
     URL.revokeObjectURL(url)
   }
 
+  const exportWeightHistoryCsv = () => {
+    if (!state.weightHistory.length) return
+    const rows = ['Дата,Вага (кг)']
+    for (const w of state.weightHistory) {
+      rows.push(`${w.date},${w.valueKg}`)
+    }
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'fitquest-weight-history.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const exportNotesTxt = () => {
     if (!allNotes.length) return
     const content = allNotes.map(([date, text]) => `--- ${formatUa(date)} (${date}) ---\n${text}\n`).join('\n')
@@ -796,7 +811,7 @@ export function Progress() {
               </span>
             </div>
           )}
-          <div style={{ display: 'grid', gap: 6 }}>
+           <div style={{ display: 'grid', gap: 6 }}>
             {state.weightHistory.slice(-5).reverse().map((w, i) => {
               const prev = state.weightHistory[state.weightHistory.length - 1 - i - 1]
               const delta = prev ? w.valueKg - prev.valueKg : null
@@ -814,6 +829,16 @@ export function Progress() {
                 </div>
               )
             })}
+          </div>
+          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              className="btn btn-sm"
+              style={{ background: 'transparent', border: '1px solid var(--border-solid)', color: 'var(--text)' }}
+              onClick={exportWeightHistoryCsv}
+            >
+              Експорт історії ваги у CSV
+            </button>
           </div>
         </div>
       )}
