@@ -130,6 +130,26 @@ export function Progress() {
     return days
   }, [selectedYear, selectedMonth])
 
+  const monthSummary = useMemo(() => {
+    let questsDone = 0
+    let xpEarned = 0
+    let activeDays = 0
+    let caloriesBurned = 0
+    for (const d of monthDays) {
+      if (!d.inMonth) continue
+      const qs = state.questsByDate[d.dateStr] || []
+      const done = qs.filter((q) => q.done)
+      if (done.length > 0) {
+        activeDays++
+        questsDone += done.length
+        const dayXp = done.reduce((sum, q) => sum + q.xp, 0)
+        xpEarned += dayXp
+        caloriesBurned += Math.round(dayXp * 3.5)
+      }
+    }
+    return { questsDone, xpEarned: Math.floor(xpEarned), activeDays, caloriesBurned }
+  }, [monthDays, state.questsByDate])
+
   const handlePrevMonth = () => {
     if (selectedMonth === 1) {
       setSelectedYear(selectedYear - 1)
@@ -454,6 +474,33 @@ export function Progress() {
               </div>
             )
           })}
+        </div>
+      </div>
+
+      <div className="panel section-mb">
+        <div className="panel-title">
+          <Zap size={16} /> Підсумок за {monthNamesUa[selectedMonth - 1]} {selectedYear}
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 10 }}>
+          Статистика тренувань та досягнень за обраний місяць.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+          <div style={{ background: 'var(--panel-sub)', padding: '10px 8px', borderRadius: 6, textAlign: 'center' }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Активних днів</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--gold-bright)' }}>{monthSummary.activeDays}</div>
+          </div>
+          <div style={{ background: 'var(--panel-sub)', padding: '10px 8px', borderRadius: 6, textAlign: 'center' }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Квестів</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--gold-bright)' }}>{monthSummary.questsDone}</div>
+          </div>
+          <div style={{ background: 'var(--panel-sub)', padding: '10px 8px', borderRadius: 6, textAlign: 'center' }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>XP зароблено</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--gold-bright)' }}>{monthSummary.xpEarned}</div>
+          </div>
+          <div style={{ background: 'var(--panel-sub)', padding: '10px 8px', borderRadius: 6, textAlign: 'center' }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Енергія (ккал)</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--gold-bright)' }}>{monthSummary.caloriesBurned}</div>
+          </div>
         </div>
       </div>
 
