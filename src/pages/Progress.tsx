@@ -210,6 +210,18 @@ export function Progress() {
   }).length
   const weeklyProgressPct = Math.min(100, Math.round((activeDaysLast7 / weeklyTarget) * 100))
 
+  const questsLast7Count = useMemo(() => {
+    let count = 0
+    let xpSum = 0
+    for (const d of days7) {
+      const qs = state.questsByDate[d] || []
+      const done = qs.filter((q) => q.done)
+      count += done.length
+      xpSum += done.reduce((sum, q) => sum + q.xp, 0)
+    }
+    return { count, xpSum: Math.floor(xpSum), avgXp: Math.floor(xpSum / 7) }
+  }, [days7, state.questsByDate])
+
   const muscleCounts = useMemo(() => {
     const counts: Record<string, number> = { push: 0, leg: 0, core: 0 }
     for (const quests of Object.values(state.questsByDate)) {
@@ -433,6 +445,33 @@ export function Progress() {
           {activeDaysLast7 >= weeklyTarget
             ? '🎉 Вітаємо! Тижневу мету тренувань досягнуто!'
             : `Ще ${Math.max(0, weeklyTarget - activeDaysLast7)} днів до виконання тижневої мети.`}
+        </div>
+      </div>
+
+      <div className="panel section-mb">
+        <div className="panel-title">
+          <TrendingUp size={16} /> Підсумок останніх 7 днів
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 10 }}>
+          Аналітика твоїх результатів за останній тиждень.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+          <div style={{ background: 'var(--panel-sub)', padding: '10px 8px', borderRadius: 6, textAlign: 'center' }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>XP за 7 днів</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--gold-bright)' }}>{questsLast7Count.xpSum}</div>
+          </div>
+          <div style={{ background: 'var(--panel-sub)', padding: '10px 8px', borderRadius: 6, textAlign: 'center' }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Сер. XP / день</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--gold-bright)' }}>{questsLast7Count.avgXp}</div>
+          </div>
+          <div style={{ background: 'var(--panel-sub)', padding: '10px 8px', borderRadius: 6, textAlign: 'center' }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Квестів за 7 дн</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--gold-bright)' }}>{questsLast7Count.count}</div>
+          </div>
+          <div style={{ background: 'var(--panel-sub)', padding: '10px 8px', borderRadius: 6, textAlign: 'center' }}>
+            <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Активні дні</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--gold-bright)' }}>{activeDaysLast7}/7</div>
+          </div>
         </div>
       </div>
 
