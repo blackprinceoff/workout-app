@@ -245,6 +245,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
       <WaterTracker />
       <DailyQuote />
       <WeeklyBossWidget onNavigate={onNavigate} />
+      <DailyNoteWidget />
 
       <div className="panel section-mb" style={{ marginTop: 16 }}>
         <div className="panel-title">
@@ -616,6 +617,59 @@ function WeeklyBossWidget({ onNavigate }: { onNavigate: (page: string) => void }
           {wonDays === 7 ? '🏆 Перемога!' : `${wonDays}/7 днів`}
         </span>
       </div>
+    </div>
+  )
+}
+
+function DailyNoteWidget() {
+  const { state, setNote } = useGame()
+  const today = state.currentDate
+  const note = state.notesByDate[today] || ''
+  const [text, setText] = useState(note)
+  const [saved, setSaved] = useState(false)
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault()
+    setNote(text)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  return (
+    <div className="panel section-mb" style={{ marginTop: 16, padding: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
+          <ScrollText size={16} color="var(--gold)" />
+          <span>Нотатка дня та самопочуття</span>
+        </div>
+        {saved && <span style={{ fontSize: 12, color: 'var(--good)', fontWeight: 600 }}>Збережено!</span>}
+      </div>
+      <form onSubmit={handleSave} style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Як пройшло тренування? Які відчуття та енергія?"
+          rows={2}
+          maxLength={300}
+          style={{
+            width: '100%',
+            padding: '8px 10px',
+            borderRadius: 6,
+            background: 'var(--surface-raised)',
+            border: '1px solid var(--border-solid)',
+            color: 'var(--text)',
+            fontSize: 13,
+            resize: 'vertical',
+            fontFamily: 'inherit',
+          }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>Записується до історії прогресу</span>
+          <button type="submit" className="btn btn-sm btn-gold" style={{ padding: '4px 12px' }}>
+            Зберегти нотатку
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
