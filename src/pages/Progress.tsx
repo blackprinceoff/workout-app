@@ -73,6 +73,21 @@ export function Progress() {
     URL.revokeObjectURL(url)
   }
 
+  const exportWaterHistoryCsv = () => {
+    if (!waterEntries.length) return
+    const rows = ['Дата,Склянок,Літрів']
+    for (const [date, count] of waterEntries) {
+      rows.push(`${date},${count},${Math.round(count * 0.25 * 10) / 10}`)
+    }
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'fitquest-water-history.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const exportNotesTxt = () => {
     if (!allNotes.length) return
     const content = allNotes.map(([date, text]) => `--- ${formatUa(date)} (${date}) ---\n${text}\n`).join('\n')
@@ -991,6 +1006,16 @@ export function Progress() {
                 </span>
               </div>
             ))}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+            <button
+              type="button"
+              className="btn btn-sm"
+              style={{ background: 'transparent', border: '1px solid var(--border-solid)', color: 'var(--text)' }}
+              onClick={exportWaterHistoryCsv}
+            >
+              Експорт історії води у CSV
+            </button>
           </div>
         </div>
       )}
