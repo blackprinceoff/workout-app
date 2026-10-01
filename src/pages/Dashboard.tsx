@@ -636,6 +636,13 @@ function DailyNoteWidget() {
     setTimeout(() => setSaved(false), 2000)
   }
 
+  const presets = [
+    '💪 Чудове тренування!',
+    '🔥 Виклався на максимум',
+    '⚡ Легке відновлення',
+    '🧘 Розтяжка та мобільність',
+  ]
+
   return (
     <div className="panel section-mb" style={{ marginTop: 16, padding: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -644,6 +651,25 @@ function DailyNoteWidget() {
           <span>Нотатка дня та самопочуття</span>
         </div>
         {saved && <span style={{ fontSize: 12, color: 'var(--good)', fontWeight: 600 }}>Збережено!</span>}
+      </div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+        {presets.map((p) => (
+          <button
+            key={p}
+            type="button"
+            className="btn btn-sm"
+            style={{ background: 'var(--surface-raised)', color: 'var(--text)', border: '1px solid var(--border-solid)', fontSize: 11, padding: '2px 8px' }}
+            onClick={() => {
+              const next = text ? `${text} ${p}` : p
+              setText(next)
+              setNote(next)
+              setSaved(true)
+              setTimeout(() => setSaved(false), 2000)
+            }}
+          >
+            {p}
+          </button>
+        ))}
       </div>
       <form onSubmit={handleSave} style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
         <textarea
