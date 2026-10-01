@@ -87,6 +87,7 @@ export function Progress() {
 
   const days14 = useMemo(() => lastNDays(14, state.currentDate), [state.currentDate])
   const days7 = useMemo(() => lastNDays(7, state.currentDate), [state.currentDate])
+  const days30 = useMemo(() => lastNDays(30, state.currentDate), [state.currentDate])
   const days35 = useMemo(() => lastNDays(35, state.currentDate), [state.currentDate])
 
   const monthNamesUa = [
@@ -1102,6 +1103,58 @@ export function Progress() {
           )}
         </div>
       )}
+
+      <div className="panel section-mb">
+        <div className="panel-title">
+          <CalendarDays size={16} /> Карта активності (останні 30 днів)
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+          Інтенсивність виконаних квестів за останній місяць.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 6 }}>
+          {days30.map((d) => {
+            const qs = state.questsByDate[d] || []
+            const done = qs.filter((q) => q.done).length
+            const total = qs.length
+            let bg = 'var(--surface-sub)'
+            let color = 'var(--text-dim)'
+            if (done >= 4 || (total > 0 && done === total)) {
+              bg = 'var(--gold)'
+              color = '#000'
+            } else if (done >= 2) {
+              bg = 'var(--gold-dim)'
+              color = '#000'
+            } else if (done === 1) {
+              bg = 'var(--surface-raised)'
+              color = 'var(--gold)'
+            }
+            return (
+              <div
+                key={d}
+                title={`${formatUa(d)}: виконано ${done}/${total} квестів`}
+                style={{
+                  background: bg,
+                  color: color,
+                  borderRadius: 4,
+                  padding: '6px 4px',
+                  textAlign: 'center',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  border: '1px solid var(--border-solid)',
+                  cursor: 'default',
+                }}
+              >
+                <div>{d.slice(8)}</div>
+                <div style={{ fontSize: 10, opacity: 0.8 }}>{done > 0 ? `${done}в` : '—'}</div>
+              </div>
+            )
+          })}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, fontSize: 11, color: 'var(--text-dim)' }}>
+          <span>← 30 днів тому</span>
+          <span>Сьогодні →</span>
+        </div>
+      </div>
 
       <div className="panel section-mb">
         <div className="panel-title">
