@@ -800,6 +800,14 @@ export function Progress() {
               </span>
             </div>
           )}
+          {state.profile.heightCm > 0 && state.profile.age > 0 && latestWeight > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '8px 10px', background: 'var(--panel-sub)', borderRadius: 6, fontSize: 13 }}>
+              <span style={{ color: 'var(--text-dim)' }}>Енергообмін (BMR / TDEE):</span>
+              <span>
+                <strong>{Math.round(10 * latestWeight + 6.25 * state.profile.heightCm - 5 * state.profile.age - 78)} ккал</strong> <span style={{ color: 'var(--text-dim)' }}>(база)</span> / <strong style={{ color: 'var(--gold)' }}>{Math.round((10 * latestWeight + 6.25 * state.profile.heightCm - 5 * state.profile.age - 78) * 1.55)} ккал</strong> <span style={{ color: 'var(--text-dim)' }}>(норма)</span>
+              </span>
+            </div>
+          )}
           {state.profile.targetWeightKg > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '8px 10px', background: 'var(--panel-sub)', borderRadius: 6, fontSize: 13 }}>
               <span style={{ color: 'var(--text-dim)' }}>Цільова вага:</span>
