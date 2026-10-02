@@ -391,9 +391,10 @@ export function Progress() {
   const [questSearch, setQuestSearch] = useState('')
   const [questStatusFilter, setQuestStatusFilter] = useState<'all' | 'done' | 'active'>('all')
   const [questCatFilter, setQuestCatFilter] = useState<string>('all')
+  const [questTypeFilter, setQuestTypeFilter] = useState<'all' | 'main' | 'custom'>('all')
 
   const allQuestsList = useMemo(() => {
-    const list: { date: string; title: string; category: string; xp: number; done: boolean; main?: boolean }[] = []
+    const list: { date: string; title: string; category: string; xp: number; done: boolean; main?: boolean; templateId?: string }[] = []
     for (const [dateStr, quests] of Object.entries(state.questsByDate || {})) {
       for (const q of quests) {
         list.push({
@@ -403,6 +404,7 @@ export function Progress() {
           xp: q.xp || 0,
           done: !!q.done,
           main: !!q.main,
+          templateId: q.templateId || '',
         })
       }
     }
@@ -415,6 +417,8 @@ export function Progress() {
       if (questStatusFilter === 'done' && !q.done) return false
       if (questStatusFilter === 'active' && q.done) return false
       if (questCatFilter !== 'all' && q.category !== questCatFilter) return false
+      if (questTypeFilter === 'main' && !q.main) return false
+      if (questTypeFilter === 'custom' && q.templateId !== 'custom') return false
       if (questSearch.trim()) {
         const query = questSearch.toLowerCase()
         const matchesTitle = q.title.toLowerCase().includes(query)
@@ -424,7 +428,7 @@ export function Progress() {
       }
       return true
     })
-  }, [allQuestsList, questStatusFilter, questCatFilter, questSearch])
+  }, [allQuestsList, questStatusFilter, questCatFilter, questTypeFilter, questSearch])
 
   const allNotes = useMemo(() => {
     return Object.entries(state.notesByDate || {})
@@ -1413,6 +1417,23 @@ export function Progress() {
               <option value="cardio">Кардіо</option>
               <option value="mobility">Мобільність</option>
               <option value="break">Перерва</option>
+            </select>
+            <select
+              value={questTypeFilter}
+              onChange={(e) => setQuestTypeFilter(e.target.value as any)}
+              aria-label="Тип квестів"
+              style={{
+                padding: '4px 8px',
+                borderRadius: 6,
+                border: '1px solid var(--border-solid)',
+                background: 'var(--surface-raised)',
+                color: 'var(--text)',
+                fontSize: 12,
+              }}
+            >
+              <option value="all">Усі типи</option>
+              <option value="main">Основні</option>
+              <option value="custom">Власні</option>
             </select>
           </div>
         </div>
