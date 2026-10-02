@@ -1,16 +1,26 @@
 import { useState } from 'react'
 import { useGame } from '../state/GameContext'
-import { ACHIEVEMENTS, getAchievementProgress } from '../game/achievements'
+import { ACHIEVEMENTS, getAchievementProgress, getAchievementProgressRatio } from '../game/achievements'
 import { formatUa } from '../game/dates'
 import { ACHIEVEMENT_ICONS, Check, Glyph, Trophy } from '../components/Glyphs'
 
 export function Achievements() {
   const { state, level } = useGame()
   const [filter, setFilter] = useState<'all' | 'unlocked' | 'locked'>('all')
+  const [sortBy, setSortBy] = useState<'default' | 'progress' | 'title'>('default')
   const [searchQuery, setSearchQuery] = useState('')
   const unlocked = Object.keys(state.unlockedAchievements).length
 
   const sorted = [...ACHIEVEMENTS].sort((a, b) => {
+    if (sortBy === 'progress') {
+      const ra = getAchievementProgressRatio(a.id, state, level.level)
+      const rb = getAchievementProgressRatio(b.id, state, level.level)
+      if (rb !== ra) return rb - ra
+      return a.title.localeCompare(b.title)
+    }
+    if (sortBy === 'title') {
+      return a.title.localeCompare(b.title)
+    }
     const ad = state.unlockedAchievements[a.id]
     const bd = state.unlockedAchievements[b.id]
     if (ad && bd) return bd.localeCompare(ad)
@@ -85,6 +95,25 @@ export function Achievements() {
         >
           Заблоковані ({ACHIEVEMENTS.length - unlocked})
         </button>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as any)}
+          aria-label="Сортування трофеїв"
+          style={{
+            padding: '6px 12px',
+            borderRadius: 6,
+            border: '1px solid var(--border-solid)',
+            background: 'var(--surface-raised)',
+            color: 'var(--text)',
+            fontSize: 14,
+            outline: 'none',
+            minWidth: 140,
+          }}
+        >
+          <option value="default">За замовчуванням</option>
+          <option value="progress">За прогресом</option>
+          <option value="title">За назвою</option>
+        </select>
         <input
           type="text"
           placeholder="Пошук трофеїв..."
@@ -124,11 +153,23 @@ export function Achievements() {
                     <Check size={12} strokeWidth={3} /> {formatUa(date)}
                   </div>
                 )}
-                {!isUnlocked && progress && (
-                  <div style={{ fontSize: 11, color: 'var(--gold)', marginTop: 4, fontWeight: 600 }}>
-                    Прогрес: {progress}
-                  </div>
-                )}
+                {!isUnlocked && progress && (() => {
+                  const ratio = getAchievementProgressRatio(a.id, state, level.level)
+                  return (
+                    <>
+                      <div style={{ fontSize: 11, color: 'var(--gold)', marginTop: 4, fontWeight: 600, display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Прогрес: {progress}</span>
+                        <span>{Math.round(ratio * 100)}%</span>
+                      </div>
+                      <div className="bar" style={{ height: 4, borderRadius: 2, background: 'var(--surface-raised)', overflow: 'hidden', marginTop: 4 }}>
+                        <div
+                          className="bar-fill gold"
+                          style={{ width: `${ratio * 100}%`, height: '100%' }}
+                        />
+                      </div>
+                    </>
+                  )
+                })()}
               </div>
             </div>
           )

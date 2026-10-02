@@ -3,7 +3,7 @@ import { reducer } from '../src/state/GameContext'
 import { createInitialState } from '../src/state/storage'
 import { generateDailyQuests } from '../src/game/quests'
 import { lastNDays } from '../src/game/dates'
-import { checkAchievements, getAchievementProgress } from '../src/game/achievements'
+import { checkAchievements, getAchievementProgress, getAchievementProgressRatio } from '../src/game/achievements'
 import type { GameState } from '../src/game/types'
 
 const MONDAY = '2026-09-21'
@@ -99,5 +99,16 @@ describe('getAchievementProgress', () => {
     }
     expect(checkAchievements(s, 1)).toContain('water_master')
     expect(getAchievementProgress('water_master', s, 1)).toBe('50/50 скл.')
+  })
+
+  it('обчислює відношення прогресу досягнення (progress ratio)', () => {
+    const s: GameState = {
+      ...createInitialState(),
+      bestStreak: 3,
+      totalQuestsDone: 5,
+    }
+    expect(getAchievementProgressRatio('streak_7', s, 1)).toBe(3 / 7)
+    expect(getAchievementProgressRatio('quests_25', s, 1)).toBe(5 / 25)
+    expect(getAchievementProgressRatio('level_5', s, 5, )).toBe(1)
   })
 })

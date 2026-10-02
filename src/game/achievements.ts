@@ -236,3 +236,73 @@ export function getAchievementProgress(id: string, state: import('./types').Game
       return null
   }
 }
+
+export function getAchievementProgressRatio(id: string, state: import('./types').GameState, level: number): number {
+  if (state.unlockedAchievements[id]) return 1
+  switch (id) {
+    case 'first_step':
+      return Math.min(1, state.totalQuestsDone / 1)
+    case 'streak_3':
+      return Math.min(1, state.bestStreak / 3)
+    case 'streak_7':
+      return Math.min(1, state.bestStreak / 7)
+    case 'streak_14':
+      return Math.min(1, state.bestStreak / 14)
+    case 'streak_30':
+      return Math.min(1, state.bestStreak / 30)
+    case 'streak_66':
+      return Math.min(1, state.bestStreak / 66)
+    case 'streak_100':
+      return Math.min(1, state.bestStreak / 100)
+    case 'habit_crafted':
+      return Math.min(1, state.bestHabit / 100)
+    case 'level_5':
+      return Math.min(1, level / 5)
+    case 'level_10':
+      return Math.min(1, level / 10)
+    case 'level_20':
+      return Math.min(1, level / 20)
+    case 'level_30':
+      return Math.min(1, level / 30)
+    case 'level_50':
+      return Math.min(1, level / 50)
+    case 'level_100':
+      return Math.min(1, level / 100)
+    case 'quests_25':
+      return Math.min(1, state.totalQuestsDone / 25)
+    case 'quests_100':
+      return Math.min(1, state.totalQuestsDone / 100)
+    case 'quests_500':
+      return Math.min(1, state.totalQuestsDone / 500)
+    case 'quests_1000':
+      return Math.min(1, state.totalQuestsDone / 1000)
+    case 'balanced': {
+      const count = [
+        state.stats.strength >= 10 ? 1 : 0,
+        state.stats.endurance >= 10 ? 1 : 0,
+        state.stats.agility >= 10 ? 1 : 0,
+      ].reduce((a, b) => a + b, 0)
+      return count / 3
+    }
+    case 'nights_watch':
+      return Math.min(1, state.perCategoryDone.break / 10)
+    case 'boss_week': {
+      const last7 = lastNDays(7, state.currentDate)
+      const completedCount = last7.filter((d) => {
+        const q = state.questsByDate[d]
+        return !!q && q.length > 0 && q.every((x) => x.done)
+      }).length
+      return completedCount / 7
+    }
+    case 'cardio_master':
+      return Math.min(1, state.perCategoryDone.cardio / 20)
+    case 'strength_master':
+      return Math.min(1, state.perCategoryDone.strength / 50)
+    case 'water_master': {
+      const total = Object.values(state.waterByDate || {}).reduce((acc, val) => acc + val, 0)
+      return Math.min(1, total / 50)
+    }
+    default:
+      return 0
+  }
+}
