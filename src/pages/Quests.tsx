@@ -121,6 +121,142 @@ function RestTimer() {
   )
 }
 
+function TabataTimer() {
+  const [workSec, setWorkSec] = useState(20)
+  const [restSec, setRestSec] = useState(10)
+  const [totalRounds, setTotalRounds] = useState(8)
+
+  const [currentRound, setCurrentRound] = useState(1)
+  const [phase, setPhase] = useState<'idle' | 'work' | 'rest' | 'finished'>('idle')
+  const [timeLeft, setTimeLeft] = useState(20)
+  const [running, setRunning] = useState(false)
+  const timerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (running) {
+      timerRef.current = window.setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            playTimerDone()
+            if (phase === 'work') {
+              if (currentRound >= totalRounds) {
+                setRunning(false)
+                setPhase('finished')
+                return 0
+              } else {
+                setPhase('rest')
+                return restSec
+              }
+            } else if (phase === 'rest') {
+              setCurrentRound((r) => r + 1)
+              setPhase('work')
+              return workSec
+            }
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [running, phase, currentRound, totalRounds, workSec, restSec])
+
+  const applyPreset = (w: number, r: number, rounds: number) => {
+    setWorkSec(w)
+    setRestSec(r)
+    setTotalRounds(rounds)
+    setCurrentRound(1)
+    setPhase('idle')
+    setTimeLeft(w)
+    setRunning(false)
+  }
+
+  const toggleRun = () => {
+    if (phase === 'idle' || phase === 'finished') {
+      setCurrentRound(1)
+      setPhase('work')
+      setTimeLeft(workSec)
+      setRunning(true)
+    } else {
+      setRunning(!running)
+    }
+  }
+
+  const reset = () => {
+    setRunning(false)
+    setPhase('idle')
+    setCurrentRound(1)
+    setTimeLeft(workSec)
+  }
+
+  const formatTime = (sec: number) => {
+    const m = Math.floor(sec / 60)
+    const s = sec % 60
+    return m > 0 ? `${m}хв ${s < 10 ? '0' : ''}${s}с` : `${s}с`
+  }
+
+  const phaseLabel = phase === 'work' ? '🔥 Робота (HIIT)' : phase === 'rest' ? '🍃 Відпочинок' : phase === 'finished' ? '🎉 Тренування завершено!' : '⏱️ Tabata / HIIT Таймер'
+
+  return (
+    <div className="panel section-mb" style={{ padding: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>
+          <Flame size={16} /> Tabata / HIIT Інтервальний таймер
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button
+            type="button"
+            className={`btn btn-sm ${workSec === 20 && restSec === 10 && totalRounds === 8 ? 'btn-gold' : ''}`}
+            style={!(workSec === 20 && restSec === 10 && totalRounds === 8) ? { background: 'var(--surface-raised)', border: '1px solid var(--border-solid)', color: 'var(--text)', fontSize: 11, padding: '2px 8px' } : { fontSize: 11, padding: '2px 8px' }}
+            onClick={() => applyPreset(20, 10, 8)}
+          >
+            Tabata (20/10 x8)
+          </button>
+          <button
+            type="button"
+            className={`btn btn-sm ${workSec === 30 && restSec === 15 && totalRounds === 6 ? 'btn-gold' : ''}`}
+            style={!(workSec === 30 && restSec === 15 && totalRounds === 6) ? { background: 'var(--surface-raised)', border: '1px solid var(--border-solid)', color: 'var(--text)', fontSize: 11, padding: '2px 8px' } : { fontSize: 11, padding: '2px 8px' }}
+            onClick={() => applyPreset(30, 15, 6)}
+          >
+            HIIT (30/15 x6)
+          </button>
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--panel-sub)', padding: '10px 14px', borderRadius: 8, flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: phase === 'work' ? 'var(--gold-bright)' : phase === 'rest' ? 'var(--good)' : 'var(--text)' }}>
+            {phaseLabel} {phase !== 'idle' && phase !== 'finished' && `(Раунд ${currentRound}/${totalRounds})`}
+          </div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: phase === 'work' ? 'var(--gold-bright)' : phase === 'rest' ? 'var(--good)' : 'var(--text)' }}>
+            {formatTime(timeLeft)}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            type="button"
+            className="btn btn-sm btn-gold"
+            onClick={toggleRun}
+          >
+            {running ? 'Пауза' : phase === 'idle' ? 'Старт Tabata' : phase === 'finished' ? 'Повторити' : 'Продовжити'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm"
+            style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-solid)', color: 'var(--text)' }}
+            onClick={reset}
+          >
+            Скинути
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function Quests() {
   const {
     state,
@@ -321,6 +457,7 @@ export function Quests() {
       </div>
 
       <RestTimer />
+      <TabataTimer />
 
       <div className="panel section-mb" style={{ padding: 12 }}>
         <div className="settings-label" style={{ fontSize: 13, marginBottom: 6 }}>
