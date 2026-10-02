@@ -47,6 +47,14 @@ export function Library() {
     { key: 'core', label: 'Спина / кор' },
   ]
 
+  const hasActiveFilters = search.trim() !== '' || selectedCategory !== 'all' || selectedMuscle !== 'all' || sortOption !== 'default'
+  const resetFilters = () => {
+    setSearch('')
+    setSelectedCategory('all')
+    setSelectedMuscle('all')
+    setSortOption('default')
+  }
+
   const filteredTemplates = useMemo(() => {
     const list = QUEST_TEMPLATES.filter((t) => {
       if (selectedCategory === 'favorites') {
@@ -140,22 +148,34 @@ export function Library() {
           ))}
         </div>
 
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {muscleFilters.map((m) => (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {muscleFilters.map((m) => (
+              <button
+                key={m.key}
+                type="button"
+                className={`btn btn-sm ${selectedMuscle === m.key ? 'btn-gold' : ''}`}
+                style={
+                  selectedMuscle !== m.key
+                    ? { background: 'var(--surface-sub)', border: '1px solid var(--border-solid)', color: 'var(--text)' }
+                    : undefined
+                }
+                onClick={() => setSelectedMuscle(m.key)}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+          {hasActiveFilters && (
             <button
-              key={m.key}
               type="button"
-              className={`btn btn-sm ${selectedMuscle === m.key ? 'btn-gold' : ''}`}
-              style={
-                selectedMuscle !== m.key
-                  ? { background: 'var(--surface-sub)', border: '1px solid var(--border-solid)', color: 'var(--text)' }
-                  : undefined
-              }
-              onClick={() => setSelectedMuscle(m.key)}
+              className="btn btn-sm"
+              style={{ background: 'transparent', border: '1px solid var(--border-solid)', color: 'var(--text-dim)', fontSize: 12 }}
+              onClick={resetFilters}
             >
-              {m.label}
+              Скинути фільтри
             </button>
-          ))}
+          )}
         </div>
       </div>
 
