@@ -162,3 +162,14 @@ describe('reducer — CUSTOM_QUESTS', () => {
     expect(deleted.questsByDate[MONDAY].length).toBe(countBefore)
   })
 })
+
+describe('reducer — SET_LANGUAGE', () => {
+  it('Змінює мову інтерфейсу', () => {
+    const s = stateFor()
+    expect(s.settings.language).toBe('uk')
+    const next = reducer(s, { type: 'SET_LANGUAGE', language: 'en' })
+    expect(next.settings.language).toBe('en')
+    const back = reducer(next, { type: 'SET_LANGUAGE', language: 'uk' })
+    expect(back.settings.language).toBe('uk')
+  })
+})

@@ -28,6 +28,7 @@ export function Settings() {
     setVolume,
     setWaterTargetGlasses,
     setWeeklyTargetDays,
+    setLanguage,
     importState,
     resetGame,
     doExport,
@@ -474,6 +475,32 @@ export function Settings() {
             style={{ width: 80, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-solid)', background: 'var(--surface-sub)', color: 'var(--text)', fontSize: 14, textAlign: 'center' }}
             aria-label="Тижнева мета тренувань"
           />
+        </div>
+        <div className="settings-row" style={{ marginTop: 12 }}>
+          <div>
+            <div className="settings-label">Мова інтерфейсу / Language</div>
+            <div className="settings-hint">
+              Поточна мова: {state.settings.language === 'en' ? 'English (EN)' : 'Українська (UA)'}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              type="button"
+              className={`btn btn-sm ${(!state.settings.language || state.settings.language === 'uk') ? 'btn-gold' : ''}`}
+              style={state.settings.language === 'en' ? { background: 'var(--surface-sub)', color: 'var(--text)', border: '1px solid var(--border-solid)' } : undefined}
+              onClick={() => setLanguage('uk')}
+            >
+              🇺🇦 UA
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${state.settings.language === 'en' ? 'btn-gold' : ''}`}
+              style={state.settings.language !== 'en' ? { background: 'var(--surface-sub)', color: 'var(--text)', border: '1px solid var(--border-solid)' } : undefined}
+              onClick={() => setLanguage('en')}
+            >
+              🇬🇧 EN
+            </button>
+          </div>
         </div>
         <div className="settings-row" style={{ marginTop: 12, borderBottom: 'none' }}>
           <div>
