@@ -51,7 +51,8 @@ type Action =
   | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'TOGGLE_SOUND' }
   | { type: 'TOGGLE_NOTIFICATIONS' }
-  | { type: 'TOGGLE_THEME' }
+    | { type: 'TOGGLE_THEME' }
+    | { type: 'SET_LANGUAGE'; language: 'uk' | 'en' }
   | { type: 'IMPORT_STATE'; state: GameState }
   | { type: 'RESET' }
   | { type: 'ROLLOVER' }
@@ -341,12 +342,12 @@ export function reducer(state: GameState, action: Action): GameState {
       return { ...state, settings: { ...state.settings, sound: !state.settings.sound } }
     case 'TOGGLE_NOTIFICATIONS':
       return { ...state, settings: { ...state.settings, notifications: !state.settings.notifications } }
-    case 'TOGGLE_THEME':
+    case 'SET_LANGUAGE':
       return {
         ...state,
         settings: {
           ...state.settings,
-          theme: state.settings.theme === 'light' ? 'dark' : 'light',
+          language: action.language,
         },
       }
     case 'SET_VOLUME':
@@ -469,9 +470,10 @@ interface GameContextValue {
     setWaterTargetGlasses: (target: number) => void
     addBodyMeasurements: (entry: Omit<BodyMeasurementEntry, 'date'>) => void
     removeBodyMeasurements: (date: string) => void
-    toggleFavoriteExercise: (templateId: string) => void
-    setWeeklyTargetDays: (target: number) => void
-   }
+     toggleFavoriteExercise: (templateId: string) => void
+     setWeeklyTargetDays: (target: number) => void
+     setLanguage: (language: 'uk' | 'en') => void
+    }
 
 const GameContext = createContext<GameContextValue | null>(null)
 
@@ -576,6 +578,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
        removeBodyMeasurements: (date) => dispatch({ type: 'REMOVE_BODY_MEASUREMENTS', date }),
        toggleFavoriteExercise: (templateId) => dispatch({ type: 'TOGGLE_FAVORITE_EXERCISE', templateId }),
        setWeeklyTargetDays: (target) => dispatch({ type: 'SET_WEEKLY_TARGET_DAYS', target }),
+       setLanguage: (language) => dispatch({ type: 'SET_LANGUAGE', language }),
       }),
     [state, level, statsList, todayQuests],
   )

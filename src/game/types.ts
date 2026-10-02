@@ -69,6 +69,7 @@ export interface GameSettings {
   volume: number
   waterTargetGlasses: number
   weeklyTargetDays: number
+  language: 'uk' | 'en'
 }
 
 export type GameEvent =
