@@ -150,6 +150,32 @@ export function Settings() {
     URL.revokeObjectURL(url)
   }
 
+  const exportWorkoutsAndAchievementsJson = () => {
+    const data = {
+      version: 1,
+      exportedAt: state.currentDate,
+      profile: {
+        name: state.profile.name,
+        level: levelInfo(state.totalXp).level,
+        class: levelInfo(state.totalXp).className,
+        totalXp: Math.floor(state.totalXp),
+      },
+      questsByDate: state.questsByDate,
+      weightHistory: state.weightHistory,
+      bodyMeasurements: state.bodyMeasurements,
+      notesByDate: state.notesByDate,
+      waterByDate: state.waterByDate,
+      unlockedAchievements: state.unlockedAchievements,
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `fitquest-workouts-achievements-${state.currentDate}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const applyImport = async (file: File) => {
     const text = await file.text()
     const ok = importState(text)
@@ -532,6 +558,21 @@ export function Settings() {
           </div>
           <button className="btn btn-gold btn-sm" onClick={doExport}>
             <Download size={14} /> Експорт
+          </button>
+        </div>
+
+        <div className="settings-row">
+          <div>
+            <div className="settings-label">Експорт журналів та досягнень (JSON)</div>
+            <div className="settings-hint">Зберегти детальний JSON-файл історії квестів, ваги, нотаток та трофеїв</div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm"
+            style={{ background: 'var(--surface-sub)', border: '1px solid var(--border-solid)', color: 'var(--text)' }}
+            onClick={exportWorkoutsAndAchievementsJson}
+          >
+            <Download size={14} /> JSON Журнал
           </button>
         </div>
 
