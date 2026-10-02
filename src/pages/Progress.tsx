@@ -26,6 +26,8 @@ export function Progress() {
   const [hipsInput, setHipsInput] = useState('')
   const [armsInput, setArmsInput] = useState('')
   const [thighsInput, setThighsInput] = useState('')
+  const [weightSortOrder, setWeightSortOrder] = useState<'desc' | 'asc'>('desc')
+  const [measurementsSortOrder, setMeasurementsSortOrder] = useState<'desc' | 'asc'>('desc')
 
   const handleSaveMeasurements = (e: React.FormEvent) => {
     e.preventDefault()
@@ -312,6 +314,22 @@ export function Progress() {
     const sum = state.weightHistory.reduce((acc, w) => acc + w.valueKg, 0)
     return Math.round((sum / state.weightHistory.length) * 10) / 10
   }, [state.weightHistory])
+
+  const sortedWeightHistory = useMemo(() => {
+    const chrono = [...state.weightHistory].sort((a, b) => a.date.localeCompare(b.date))
+    const mapped = chrono.map((w, idx) => {
+      const prev = idx > 0 ? chrono[idx - 1] : null
+      const delta = prev ? w.valueKg - prev.valueKg : null
+      return { ...w, delta }
+    })
+    return weightSortOrder === 'desc' ? mapped.reverse() : mapped
+  }, [state.weightHistory, weightSortOrder])
+
+  const sortedBodyMeasurements = useMemo(() => {
+    const copy = [...state.bodyMeasurements]
+    copy.sort((a, b) => (measurementsSortOrder === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)))
+    return copy
+  }, [state.bodyMeasurements, measurementsSortOrder])
 
   const personalRecords = useMemo(() => {
     let maxQ = 0
@@ -1059,25 +1077,32 @@ export function Progress() {
               </span>
             </div>
           )}
-           <div style={{ display: 'grid', gap: 6 }}>
-            {state.weightHistory.slice(-5).reverse().map((w, i) => {
-              const prev = state.weightHistory[state.weightHistory.length - 1 - i - 1]
-              const delta = prev ? w.valueKg - prev.valueKg : null
-              return (
-                <div key={w.date} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-dim)' }}>
-                  <span>{formatUa(w.date)}</span>
-                  <span>
-                    <strong style={{ color: 'var(--text)' }}>{w.valueKg}</strong> кг
-                    {delta !== null && delta !== 0 && (
-                      <span style={{ marginLeft: 6, color: delta < 0 ? 'var(--good)' : 'var(--danger)', fontSize: 12 }}>
-                        {delta > 0 ? '+' : ''}{delta.toFixed(1)}
-                      </span>
-                    )}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
+           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+             <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>Історія вимірювань:</span>
+             <button
+               type="button"
+               onClick={() => setWeightSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))}
+               className="btn btn-sm"
+               style={{ background: 'transparent', border: '1px solid var(--border-solid)', color: 'var(--text)', fontSize: 11, padding: '2px 8px' }}
+             >
+               {weightSortOrder === 'desc' ? 'Спочатку новіші ▾' : 'Спочатку старіші ▴'}
+             </button>
+           </div>
+           <div style={{ display: 'grid', gap: 6, maxHeight: 200, overflowY: 'auto' }}>
+             {sortedWeightHistory.map((w) => (
+               <div key={w.date} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-dim)' }}>
+                 <span>{formatUa(w.date)}</span>
+                 <span>
+                   <strong style={{ color: 'var(--text)' }}>{w.valueKg}</strong> кг
+                   {w.delta !== null && w.delta !== 0 && (
+                     <span style={{ marginLeft: 6, color: w.delta < 0 ? 'var(--good)' : 'var(--danger)', fontSize: 12 }}>
+                       {w.delta > 0 ? '+' : ''}{w.delta.toFixed(1)}
+                     </span>
+                   )}
+                 </span>
+               </div>
+             ))}
+           </div>
           <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
             <button
               type="button"
@@ -1209,8 +1234,19 @@ export function Progress() {
 
         {state.bodyMeasurements.length > 0 ? (
           <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>Історія замірів:</span>
+              <button
+                type="button"
+                onClick={() => setMeasurementsSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))}
+                className="btn btn-sm"
+                style={{ background: 'transparent', border: '1px solid var(--border-solid)', color: 'var(--text)', fontSize: 11, padding: '2px 8px' }}
+              >
+                {measurementsSortOrder === 'desc' ? 'Спочатку новіші ▾' : 'Спочатку старіші ▴'}
+              </button>
+            </div>
             <div style={{ display: 'grid', gap: 8, maxHeight: 250, overflowY: 'auto' }}>
-              {state.bodyMeasurements.slice(-10).reverse().map((m) => (
+              {sortedBodyMeasurements.map((m) => (
                 <div key={m.date} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--panel-sub)', padding: '8px 12px', borderRadius: 6, fontSize: 13 }}>
                   <div>
                     <div style={{ color: 'var(--gold)', fontWeight: 600, marginBottom: 2 }}>{formatUa(m.date)}</div>
