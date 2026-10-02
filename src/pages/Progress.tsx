@@ -121,6 +121,37 @@ export function Progress() {
     URL.revokeObjectURL(url)
   }
 
+  const exportExerciseStatsCsv = () => {
+    const map: Record<string, { title: string; count: number; totalXp: number; category: string }> = {}
+    for (const quests of Object.values(state.questsByDate)) {
+      for (const q of quests) {
+        if (q.done) {
+          const key = q.templateId || q.title
+          if (!map[key]) {
+            map[key] = { title: q.title, count: 0, totalXp: 0, category: q.category }
+          }
+          map[key].count++
+          map[key].totalXp += q.xp
+        }
+      }
+    }
+    const allExs = Object.values(map).sort((a, b) => b.count - a.count || b.totalXp - a.totalXp)
+    if (!allExs.length) return
+    const rows = ['Вправа,Категорія,Кількість виконань,Зароблено XP']
+    for (const ex of allExs) {
+      const title = `"${(ex.title || '').replace(/"/g, '""')}"`
+      const category = CATEGORY_LABELS[ex.category as keyof typeof CATEGORY_LABELS] || ex.category
+      rows.push(`${title},${category},${ex.count},${Math.floor(ex.totalXp)}`)
+    }
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'fitquest-exercise-stats.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const days14 = useMemo(() => lastNDays(14, state.currentDate), [state.currentDate])
   const days7 = useMemo(() => lastNDays(7, state.currentDate), [state.currentDate])
   const days30 = useMemo(() => lastNDays(30, state.currentDate), [state.currentDate])
@@ -836,6 +867,16 @@ export function Progress() {
                 </div>
               </div>
             ))}
+            <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                className="btn btn-sm"
+                style={{ background: 'transparent', border: '1px solid var(--border-solid)', color: 'var(--text)' }}
+                onClick={exportExerciseStatsCsv}
+              >
+                Експорт статистики вправ у CSV
+              </button>
+            </div>
           </div>
         )}
       </div>
