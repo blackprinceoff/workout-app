@@ -357,6 +357,43 @@ export function Progress() {
       : 'var(--danger)'
 
   const [noteSearch, setNoteSearch] = useState('')
+  const [questSearch, setQuestSearch] = useState('')
+  const [questStatusFilter, setQuestStatusFilter] = useState<'all' | 'done' | 'active'>('all')
+  const [questCatFilter, setQuestCatFilter] = useState<string>('all')
+
+  const allQuestsList = useMemo(() => {
+    const list: { date: string; title: string; category: string; xp: number; done: boolean; main?: boolean }[] = []
+    for (const [dateStr, quests] of Object.entries(state.questsByDate || {})) {
+      for (const q of quests) {
+        list.push({
+          date: dateStr,
+          title: q.title || '',
+          category: q.category || 'strength',
+          xp: q.xp || 0,
+          done: !!q.done,
+          main: !!q.main,
+        })
+      }
+    }
+    list.sort((a, b) => b.date.localeCompare(a.date))
+    return list
+  }, [state.questsByDate])
+
+  const filteredQuestsList = useMemo(() => {
+    return allQuestsList.filter((q) => {
+      if (questStatusFilter === 'done' && !q.done) return false
+      if (questStatusFilter === 'active' && q.done) return false
+      if (questCatFilter !== 'all' && q.category !== questCatFilter) return false
+      if (questSearch.trim()) {
+        const query = questSearch.toLowerCase()
+        const matchesTitle = q.title.toLowerCase().includes(query)
+        const matchesDate = q.date.includes(query)
+        const matchesCat = (CATEGORY_LABELS[q.category as keyof typeof CATEGORY_LABELS] || q.category).toLowerCase().includes(query)
+        if (!matchesTitle && !matchesDate && !matchesCat) return false
+      }
+      return true
+    })
+  }, [allQuestsList, questStatusFilter, questCatFilter, questSearch])
 
   const allNotes = useMemo(() => {
     return Object.entries(state.notesByDate || {})
@@ -1239,6 +1276,111 @@ export function Progress() {
           <span>← 30 днів тому</span>
           <span>Сьогодні →</span>
         </div>
+      </div>
+
+      <div className="panel section-mb">
+        <div className="panel-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Swords size={16} /> Історія квестів ({filteredQuestsList.length}/{allQuestsList.length})
+          </span>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              placeholder="Пошук квестів..."
+              value={questSearch}
+              onChange={(e) => setQuestSearch(e.target.value)}
+              aria-label="Пошук квестів"
+              style={{
+                padding: '4px 10px',
+                borderRadius: 6,
+                border: '1px solid var(--border-solid)',
+                background: 'var(--surface-raised)',
+                color: 'var(--text)',
+                fontSize: 13,
+                outline: 'none',
+                width: 140,
+              }}
+            />
+            <select
+              value={questStatusFilter}
+              onChange={(e) => setQuestStatusFilter(e.target.value as any)}
+              aria-label="Статус квестів"
+              style={{
+                padding: '4px 8px',
+                borderRadius: 6,
+                border: '1px solid var(--border-solid)',
+                background: 'var(--surface-raised)',
+                color: 'var(--text)',
+                fontSize: 12,
+              }}
+            >
+              <option value="all">Усі статуси</option>
+              <option value="done">Виконані</option>
+              <option value="active">Активні</option>
+            </select>
+            <select
+              value={questCatFilter}
+              onChange={(e) => setQuestCatFilter(e.target.value)}
+              aria-label="Категорія квестів"
+              style={{
+                padding: '4px 8px',
+                borderRadius: 6,
+                border: '1px solid var(--border-solid)',
+                background: 'var(--surface-raised)',
+                color: 'var(--text)',
+                fontSize: 12,
+              }}
+            >
+              <option value="all">Усі категорії</option>
+              <option value="strength">Силові</option>
+              <option value="core">Кор</option>
+              <option value="cardio">Кардіо</option>
+              <option value="mobility">Мобільність</option>
+              <option value="break">Перерва</option>
+            </select>
+          </div>
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 12 }}>
+          Архів усіх квестів із можливістю пошуку за назвою, датою чи категорією.
+        </p>
+        {filteredQuestsList.length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--text-dim)', fontStyle: 'italic', padding: '12px 0', textAlign: 'center' }}>
+            Не знайдено квестів за обраними фільтрами.
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: 6, maxHeight: 300, overflowY: 'auto' }}>
+            {filteredQuestsList.slice(0, 100).map((q, idx) => (
+              <div
+                key={`${q.date}-${idx}-${q.title}`}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  background: 'var(--panel-sub)',
+                  padding: '8px 12px',
+                  borderRadius: 6,
+                  fontSize: 13,
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                    <span style={{ color: 'var(--gold)', fontWeight: 600, fontSize: 12 }}>{formatUa(q.date)}</span>
+                    <span style={{ fontSize: 11, background: 'var(--surface-raised)', color: 'var(--text-dim)', padding: '1px 6px', borderRadius: 4 }}>
+                      {CATEGORY_LABELS[q.category as keyof typeof CATEGORY_LABELS] || q.category}
+                    </span>
+                  </div>
+                  <div style={{ fontWeight: 500, color: 'var(--text)' }}>{q.title}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 700, color: 'var(--gold)' }}>+{q.xp} XP</div>
+                  <div style={{ fontSize: 11, color: q.done ? 'var(--good)' : 'var(--text-dim)' }}>
+                    {q.done ? '✓ Виконано' : 'Активний'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="panel section-mb">
