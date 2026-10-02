@@ -13,7 +13,7 @@ import { dayKindOf, effectiveLoad, QUEST_TEMPLATES, warmFactor } from '../game/q
 import { classNameFor, levelInfo, xpMultiplierParts } from '../game/leveling'
 import type { DailyQuest, Intensity, MuscleGroup, QuestCategory, StatKey } from '../game/types'
 import { CategoryGlyph, Check, Dumbbell, Flame, RefreshCw, ScrollText, Shield, Sparkles, StatGlyph, Target, Timer } from '../components/Glyphs'
-import { playTimerDone } from '../utils/sound'
+import { playAchievement, playTimerDone } from '../utils/sound'
 
 const INTENSITIES: Intensity[] = ['light', 'normal', 'intense']
 
@@ -257,6 +257,81 @@ function TabataTimer() {
   )
 }
 
+function QuestsWaterWidget() {
+  const { state, setWater } = useGame()
+  const waterCount = state.waterByDate[state.currentDate] ?? 0
+  const target = state.settings.waterTargetGlasses ?? 8
+
+  const updateWaterCount = (newCount: number) => {
+    const clamped = Math.max(0, Math.min(30, newCount))
+    if (waterCount < target && clamped >= target && state.settings.sound) {
+      void playAchievement()
+    }
+    setWater(clamped)
+  }
+
+  return (
+    <div className="panel section-mb" style={{ padding: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>
+          💧 Гідратація під час тренування
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--gold-bright)', fontWeight: 600 }}>
+          {waterCount} / {target} скл. ({Math.round(waterCount * 0.25 * 10) / 10} л)
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+        {Array.from({ length: Math.max(target, waterCount, 8) }).map((_, i) => {
+          const filled = i < waterCount
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => updateWaterCount(filled ? i : i + 1)}
+              title={`Склянка ${i + 1} (250 мл)`}
+              style={{
+                width: 26,
+                height: 32,
+                borderRadius: '3px 3px 8px 8px',
+                background: filled ? 'var(--gold)' : 'var(--surface-raised)',
+                border: '1px solid var(--border-solid)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 11,
+                padding: 0,
+                color: filled ? 'var(--background)' : 'var(--text-dim)',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              🥛
+            </button>
+          )
+        })}
+        <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() => updateWaterCount(waterCount + 1)}
+            style={{ padding: '2px 8px', fontSize: 11, background: 'var(--surface-raised)', color: 'var(--text)', border: '1px solid var(--border-solid)' }}
+          >
+            +250мл
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-gold"
+            onClick={() => updateWaterCount(waterCount + 2)}
+            style={{ padding: '2px 8px', fontSize: 11 }}
+          >
+            +500мл
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function Quests() {
   const {
     state,
@@ -458,6 +533,7 @@ export function Quests() {
 
       <RestTimer />
       <TabataTimer />
+      <QuestsWaterWidget />
 
       <div className="panel section-mb" style={{ padding: 12 }}>
         <div className="settings-label" style={{ fontSize: 13, marginBottom: 6 }}>
