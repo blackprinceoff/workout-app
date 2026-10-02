@@ -446,10 +446,22 @@ export function Progress() {
 
   return (
     <>
-      <h1 className="page-title">
-        <BarChart3 size={24} strokeWidth={1.6} /> Прогрес
-      </h1>
-      <p className="page-sub">Статистика твого шляху до дисципліни</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 22 }}>
+        <div>
+          <h1 className="page-title" style={{ marginBottom: 4 }}>
+            <BarChart3 size={24} strokeWidth={1.6} /> Прогрес
+          </h1>
+          <p className="page-sub" style={{ margin: 0 }}>Статистика твого шляху до дисципліни</p>
+        </div>
+        <button
+          type="button"
+          className="btn btn-sm"
+          style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-solid)', color: 'var(--text)' }}
+          onClick={() => window.print()}
+        >
+          🖨️ Друк звіту
+        </button>
+      </div>
 
       <div className="grid-stats section-mb">
         <div className="kpi">
@@ -979,6 +991,29 @@ export function Progress() {
               </span>
             )}
           </div>
+          {state.weightHistory.length > 1 && (
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 80, margin: '14px 0', padding: '0 4px', borderBottom: '1px solid var(--border-solid)', borderTop: '1px solid var(--border-solid)', paddingTop: 8 }}>
+              {state.weightHistory.slice(-14).map((w) => {
+                const span = maxWeight - minWeight || 1;
+                const heightPct = Math.max(15, Math.min(100, ((w.valueKg - minWeight) / span) * 75 + 25));
+                return (
+                  <div key={w.date} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
+                    <div style={{ fontSize: 9, color: 'var(--text-dim)', marginBottom: 2 }}>{w.valueKg}</div>
+                    <div
+                      style={{
+                        width: '100%',
+                        height: `${heightPct}%`,
+                        background: 'var(--gold)',
+                        borderRadius: '3px 3px 0 0',
+                      }}
+                      title={`${formatUa(w.date)}: ${w.valueKg} кг`}
+                    />
+                    <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 4 }}>{w.date.slice(5)}</div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12, padding: '8px 10px', background: 'var(--panel-sub)', borderRadius: 6, fontSize: 13, textAlign: 'center' }}>
             <div>
               <div style={{ color: 'var(--text-dim)', fontSize: 11 }}>Мінімум</div>
