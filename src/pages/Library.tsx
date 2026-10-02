@@ -15,6 +15,8 @@ export function Library() {
   const [selectedCategory, setSelectedCategory] = useState<QuestCategory | 'all' | 'favorites' | 'completed'>('all')
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all')
   const [sortOption, setSortOption] = useState<'default' | 'xp-desc' | 'difficulty-asc' | 'title-asc'>('default')
+  const [selectedDifficulty, setSelectedDifficulty] = useState<number | 'all'>('all')
+  const [onlyUnlocked, setOnlyUnlocked] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<QuestTemplate | null>(null)
 
   const categories: { key: QuestCategory | 'all' | 'favorites' | 'completed'; label: string }[] = [
@@ -47,12 +49,21 @@ export function Library() {
     { key: 'core', label: 'Спина / кор' },
   ]
 
-  const hasActiveFilters = search.trim() !== '' || selectedCategory !== 'all' || selectedMuscle !== 'all' || sortOption !== 'default'
+  const difficultyFilters: { key: number | 'all'; label: string }[] = [
+    { key: 'all', label: 'Усі складності' },
+    { key: 1, label: '⭐ 1' },
+    { key: 2, label: '⭐⭐ 2' },
+    { key: 3, label: '⭐⭐⭐ 3' },
+  ]
+
+  const hasActiveFilters = search.trim() !== '' || selectedCategory !== 'all' || selectedMuscle !== 'all' || sortOption !== 'default' || selectedDifficulty !== 'all' || onlyUnlocked
   const resetFilters = () => {
     setSearch('')
     setSelectedCategory('all')
     setSelectedMuscle('all')
     setSortOption('default')
+    setSelectedDifficulty('all')
+    setOnlyUnlocked(false)
   }
 
   const filteredTemplates = useMemo(() => {
@@ -65,6 +76,11 @@ export function Library() {
         return false
       }
       if (selectedMuscle !== 'all' && t.muscle !== selectedMuscle) return false
+      if (selectedDifficulty !== 'all' && t.difficulty !== selectedDifficulty) return false
+      if (onlyUnlocked) {
+        const isUnlocked = !t.minLevel || t.minLevel <= currentLevel
+        if (!isUnlocked) return false
+      }
       if (search.trim()) {
         const q = search.toLowerCase()
         const matchesTitle = t.title.toLowerCase().includes(q)
@@ -80,7 +96,7 @@ export function Library() {
       if (sortOption === 'title-asc') return a.title.localeCompare(b.title, 'uk')
       return 0
     })
-  }, [selectedCategory, selectedMuscle, search, sortOption, state.favoriteExerciseIds, completionCountFor])
+  }, [selectedCategory, selectedMuscle, selectedDifficulty, onlyUnlocked, search, sortOption, state.favoriteExerciseIds, completionCountFor, currentLevel])
 
   return (
     <>
@@ -165,6 +181,38 @@ export function Library() {
                 {m.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {difficultyFilters.map((d) => (
+              <button
+                key={String(d.key)}
+                type="button"
+                className={`btn btn-sm ${selectedDifficulty === d.key ? 'btn-gold' : ''}`}
+                style={
+                  selectedDifficulty !== d.key
+                    ? { background: 'var(--surface-sub)', border: '1px solid var(--border-solid)', color: 'var(--text)' }
+                    : undefined
+                }
+                onClick={() => setSelectedDifficulty(d.key)}
+              >
+                {d.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={`btn btn-sm ${onlyUnlocked ? 'btn-gold' : ''}`}
+              style={
+                !onlyUnlocked
+                  ? { background: 'var(--surface-sub)', border: '1px solid var(--border-solid)', color: 'var(--text)' }
+                  : undefined
+              }
+              onClick={() => setOnlyUnlocked(!onlyUnlocked)}
+            >
+              🔓 Лише доступні
+            </button>
           </div>
           {hasActiveFilters && (
             <button
