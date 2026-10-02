@@ -519,6 +519,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
         if (state.settings.sound) {
           playQuest()
         }
+        if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+          navigator.vibrate(40)
+        }
         dispatch({ type: 'COMPLETE_QUEST', questId })
       },
       undoQuest: (questId) => dispatch({ type: 'UNCOMPLETE_QUEST', questId }),
