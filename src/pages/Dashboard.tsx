@@ -21,7 +21,7 @@ import {
   Trophy,
   Zap,
 } from '../components/Glyphs'
-import type { QuestCategory } from '../game/types'
+import type { QuestCategory, StatKey } from '../game/types'
 
 export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }) {
   const { state, level, statsList, todayQuests } = useGame()
@@ -247,6 +247,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }
       <WeeklyBossWidget onNavigate={onNavigate} />
       <DailyNoteWidget />
       <QuickWeightWidget />
+      <QuickRoutinesWidget />
 
       <div className="panel section-mb" style={{ marginTop: 16 }}>
         <div className="panel-title">
@@ -765,11 +766,83 @@ function QuickWeightWidget() {
           <button type="button" className="btn btn-sm" onClick={() => adjust(0.5)} title="Збільшити на 0.5 кг" style={{ padding: '4px 8px', fontSize: 12, background: 'var(--surface-raised)', color: 'var(--text)', border: '1px solid var(--border-solid)' }}>
             +0.5
           </button>
-          <button type="submit" className="btn btn-sm btn-gold" style={{ padding: '4px 12px' }}>
+           <button type="submit" className="btn btn-sm btn-gold" style={{ padding: '4px 12px' }}>
             Зберегти
           </button>
         </div>
       </form>
+    </div>
+  )
+}
+
+function QuickRoutinesWidget() {
+  const { addCustomQuest } = useGame()
+  const [addedRoutine, setAddedRoutine] = useState<string | null>(null)
+
+  const routines = [
+    {
+      name: '💪 Базова сила',
+      quests: [
+        { title: '💪 Віджимання від підлоги', category: 'strength' as QuestCategory, xp: 20, stat: 'strength' as StatKey },
+        { title: '🦵 Глибокі присідання', category: 'strength' as QuestCategory, xp: 15, stat: 'strength' as StatKey },
+        { title: '🧱 Планка класична', category: 'core' as QuestCategory, xp: 15, stat: 'endurance' as StatKey },
+      ],
+    },
+    {
+      name: '🔥 Прес та кор',
+      quests: [
+        { title: '🧱 Планка класична', category: 'core' as QuestCategory, xp: 15, stat: 'endurance' as StatKey },
+        { title: '🔄 Скручування на прес', category: 'core' as QuestCategory, xp: 15, stat: 'strength' as StatKey },
+      ],
+    },
+    {
+      name: '🧘 Мобільність',
+      quests: [
+        { title: '🧘 Ранкова розтяжка', category: 'mobility' as QuestCategory, xp: 15, stat: 'agility' as StatKey },
+        { title: '🤸 Обертання суглобів', category: 'mobility' as QuestCategory, xp: 10, stat: 'agility' as StatKey },
+      ],
+    },
+  ]
+
+  const handleAddRoutine = (routine: typeof routines[0]) => {
+    for (const q of routine.quests) {
+      addCustomQuest(q.title, q.category, q.xp, q.stat)
+    }
+    setAddedRoutine(routine.name)
+    setTimeout(() => setAddedRoutine(null), 2000)
+  }
+
+  return (
+    <div className="panel section-mb" style={{ marginTop: 16, padding: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
+          <Sparkles size={16} color="var(--gold)" />
+          <span>Швидкі комплекси (рутини)</span>
+        </div>
+        {addedRoutine && <span style={{ fontSize: 12, color: 'var(--good)', fontWeight: 600 }}>Додано «{addedRoutine}»!</span>}
+      </div>
+      <p style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 10 }}>
+        Додайте готову комбінацію вправ на сьогодні в один клік.
+      </p>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {routines.map((r) => (
+          <button
+            key={r.name}
+            type="button"
+            className="btn btn-sm"
+            style={{
+              background: 'var(--surface-raised)',
+              border: '1px solid var(--border-solid)',
+              color: 'var(--text)',
+              fontSize: 12,
+              padding: '6px 10px',
+            }}
+            onClick={() => handleAddRoutine(r)}
+          >
+            + {r.name} ({r.quests.length} впр.)
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
